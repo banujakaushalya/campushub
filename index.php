@@ -1,5 +1,109 @@
 <?php
 require_once 'includes/header.php';
+require_once 'includes/db.php';
+
+// Fetch real events from database
+$events = [];
+$events_result = Database::search("SELECT * FROM events WHERE status = 'upcoming' ORDER BY event_date ASC LIMIT 6");
+if ($events_result && $events_result->num_rows > 0) {
+    while ($row = $events_result->fetch_assoc()) {
+        $events[] = $row;
+    }
+} else {
+    // Beginner fallback sample events if database is loading or empty
+    $events = [
+        [
+            'event_id' => 1,
+            'title' => 'Tech Coding Workshop',
+            'description' => 'Build practical skills with a hands-on session led by student developers.',
+            'category' => 'Workshop',
+            'event_date' => '2026-04-18',
+            'event_time' => '10:00:00',
+            'location' => 'Lab 04, Tech Campus',
+            'banner_image' => 'tech_coding_work_shop.jpg'
+        ],
+        [
+            'event_id' => 2,
+            'title' => 'Design Thinking Lab',
+            'description' => 'Turn a bright idea into a thoughtful solution alongside your peers.',
+            'category' => 'Workshop',
+            'event_date' => '2026-04-22',
+            'event_time' => '14:00:00',
+            'location' => 'Design Studio 2',
+            'banner_image' => 'tech_coding_work_shop.jpg'
+        ],
+        [
+            'event_id' => 3,
+            'title' => 'Campus Creative Night',
+            'description' => 'Share music, art, and stories in an open evening for the whole campus.',
+            'category' => 'Cultural',
+            'event_date' => '2026-04-25',
+            'event_time' => '17:30:00',
+            'location' => 'Open Amphitheatre',
+            'banner_image' => 'tech_coding_work_shop.jpg'
+        ],
+        [
+            'event_id' => 4,
+            'title' => 'Career Conversations',
+            'description' => 'Meet local professionals and ask the questions that shape your next step.',
+            'category' => 'Career',
+            'event_date' => '2026-04-29',
+            'event_time' => '11:00:00',
+            'location' => 'Auditorium B',
+            'banner_image' => 'tech_coding_work_shop.jpg'
+        ],
+        [
+            'event_id' => 5,
+            'title' => 'Community Volunteer Day',
+            'description' => 'Spend a morning making a tangible difference with campus organizations.',
+            'category' => 'Community',
+            'event_date' => '2026-05-03',
+            'event_time' => '09:00:00',
+            'location' => 'Campus Green Grounds',
+            'banner_image' => 'tech_coding_work_shop.jpg'
+        ],
+        [
+            'event_id' => 6,
+            'title' => 'Student Founder Meetup',
+            'description' => 'Connect with ambitious builders, founders, and future collaborators.',
+            'category' => 'Competition',
+            'event_date' => '2026-05-07',
+            'event_time' => '18:00:00',
+            'location' => 'Innovation Hub',
+            'banner_image' => 'tech_coding_work_shop.jpg'
+        ]
+    ];
+}
+
+// Fetch announcements
+$announcements = [];
+$ann_result = Database::search("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 3");
+if ($ann_result && $ann_result->num_rows > 0) {
+    while ($row = $ann_result->fetch_assoc()) {
+        $announcements[] = $row;
+    }
+} else {
+    $announcements = [
+        [
+            'announcement_id' => 1,
+            'title' => 'Spring event registration is now open',
+            'content' => 'Browse the calendar and reserve your place at the events that interest you most.',
+            'created_at' => '2026-04-10'
+        ],
+        [
+            'announcement_id' => 2,
+            'title' => 'Club activities schedule for Semester 1',
+            'content' => 'All society leadership meetings and initial orientation workshops are published.',
+            'created_at' => '2026-04-08'
+        ],
+        [
+            'announcement_id' => 3,
+            'title' => 'Campus transport timings update',
+            'content' => 'Shuttle service routes between Java Institute hubs have been revised.',
+            'created_at' => '2026-04-05'
+        ]
+    ];
+}
 ?>
 <main class="page-container">
   <style>
@@ -53,7 +157,6 @@ require_once 'includes/header.php';
       color: rgba(255, 255, 255, .78);
       font-family: Cabin Sketch, cursive;
       font-size: 1.25rem;
-      
     }
 
     .content-section {
@@ -97,6 +200,7 @@ require_once 'includes/header.php';
       background: #ffffff;
       box-shadow: 0 10px 24px rgba(23, 27, 42, .07);
       transition: transform .2s ease, box-shadow .2s ease;
+      text-decoration: none;
     }
 
     .event-card:hover {
@@ -147,6 +251,8 @@ require_once 'includes/header.php';
       border-left: 4px solid var(--coral);
       background: #ffffff;
       box-shadow: 0 10px 24px rgba(23, 27, 42, .06);
+      margin-bottom: 16px;
+      border-radius: 6px;
     }
 
     .announcement h3,
@@ -206,22 +312,11 @@ require_once 'includes/header.php';
       background: #f0f4f8;
     }
 
-    .page-link:focus {
-      outline: none;
-    }
-
     .page-link.active {
       border-color: var(--ink);
       background: var(--ink);
       color: #ffffff;
       cursor: default;
-    }
-
-    .page-link.disabled {
-      border-color: #eaeaea;
-      background: #fafafa;
-      color: #b5b5b5;
-      pointer-events: none;
     }
 
     @media (max-width: 760px) {
@@ -244,20 +339,6 @@ require_once 'includes/header.php';
         align-items: flex-start;
         flex-direction: column;
       }
-
-      .pagination-container {
-        gap: 5px;
-      }
-
-      .page-link {
-        min-width: 36px;
-        padding: 0 9px;
-      }
-
-      .page-link.prev-next {
-        padding: 0 8px;
-        font-size: .78rem;
-      }
     }
   </style>
 
@@ -274,99 +355,51 @@ require_once 'includes/header.php';
         <h2 id="featured-events-title">Featured Events</h2>
         <p>Find your next campus experience.</p>
       </div>
-      <p>Showing 1 to 6 of 18 events</p>
+      <p>Showing <?php echo count($events); ?> upcoming events</p>
     </div>
 
     <div class="event-container">
-      <article class="event-card">
-        <div class="img-container"></div>
-        <div class="event-info">
-          <p class="event-meta">APR 18, 2026 · 10:00 AM</p>
-          <h3>Tech Coding Workshop</h3>
-          <p>Build practical skills with a hands-on session led by student developers.</p>
-        </div>
-      </article>
-      <article class="event-card">
-        <div class="img-container"></div>
-        <div class="event-info">
-          <p class="event-meta">APR 22, 2026 · 2:00 PM</p>
-          <h3>Design Thinking Lab</h3>
-          <p>Turn a bright idea into a thoughtful solution alongside your peers.</p>
-        </div>
-      </article>
-      <article class="event-card">
-        <div class="img-container"></div>
-        <div class="event-info">
-          <p class="event-meta">APR 25, 2026 · 5:30 PM</p>
-          <h3>Campus Creative Night</h3>
-          <p>Share music, art, and stories in an open evening for the whole campus.</p>
-        </div>
-      </article>
-      <article class="event-card">
-        <div class="img-container"></div>
-        <div class="event-info">
-          <p class="event-meta">APR 29, 2026 · 11:00 AM</p>
-          <h3>Career Conversations</h3>
-          <p>Meet local professionals and ask the questions that shape your next step.</p>
-        </div>
-      </article>
-      <article class="event-card">
-        <div class="img-container"></div>
-        <div class="event-info">
-          <p class="event-meta">MAY 03, 2026 · 9:00 AM</p>
-          <h3>Community Volunteer Day</h3>
-          <p>Spend a morning making a tangible difference with campus organizations.</p>
-        </div>
-      </article>
-      <article class="event-card">
-        <div class="img-container"></div>
-        <div class="event-info">
-          <p class="event-meta">MAY 07, 2026 · 6:00 PM</p>
-          <h3>Student Founder Meetup</h3>
-          <p>Connect with ambitious builders, founders, and future collaborators.</p>
-        </div>
-      </article>
+      <?php foreach ($events as $event): ?>
+        <?php
+          $formatted_date = date('M d, Y', strtotime($event['event_date']));
+          $formatted_time = date('g:i A', strtotime($event['event_time']));
+        ?>
+        <a href="student/event_details.php?id=<?php echo htmlspecialchars($event['event_id']); ?>" class="event-card">
+          <div class="img-container"></div>
+          <div class="event-info">
+            <p class="event-meta"><?php echo strtoupper($formatted_date); ?> · <?php echo $formatted_time; ?></p>
+            <h3><?php echo htmlspecialchars($event['title']); ?></h3>
+            <p><?php echo htmlspecialchars(mb_strimwidth($event['description'], 0, 95, '...')); ?></p>
+          </div>
+        </a>
+      <?php endforeach; ?>
     </div>
 
     <nav class="pagination-container" aria-label="Event pages">
-      <a class="page-link prev-next disabled" href="#" aria-disabled="true">&laquo; Previous</a>
-      <a class="page-link active" href="#" aria-current="page">1</a>
-      <a class="page-link" href="#">2</a>
-      <a class="page-link" href="#">3</a>
-      <a class="page-link" href="#">4</a>
-      <a class="page-link" href="#">5</a>
-      <a class="page-link prev-next" href="#">Next &raquo;</a>
+      <a class="page-link active" href="index.php">1</a>
+      <a class="page-link" href="student/events.php">Browse All Events &raquo;</a>
     </nav>
   </section>
 
   <section class="content-section" aria-labelledby="latest-announcement-title">
     <div class="section-heading">
       <div>
-        <h2 id="latest-announcement-title">Latest Announcement</h2>
+        <h2 id="latest-announcement-title">Latest Announcements</h2>
+        <p>Official circulars from Student Services.</p>
       </div>
+      <p><a href="announcements.php" style="color: var(--coral); text-decoration: none; font-weight: bold;">View All &raquo;</a></p>
     </div>
-    <article class="announcement">
-      <div>
-        <h3>Spring event registration is now open</h3>
-        <p>Browse the calendar and reserve your place at the events that interest you most.</p>
-      </div>
-      <span class="announcement-date">APR 10, 2026</span>
-    </article>
-    <article class="announcement">
-      <div>
-        <h3>Spring event registration is now open</h3>
-        <p>Browse the calendar and reserve your place at the events that interest you most.</p>
-      </div>
-      <span class="announcement-date">APR 10, 2026</span>
-    </article>
-    <article class="announcement">
-      <div>
-        <h3>Spring event registration is now open</h3>
-        <p>Browse the calendar and reserve your place at the events that interest you most.</p>
-      </div>
-      <span class="announcement-date">APR 10, 2026</span>
-    </article>
-    
+
+    <?php foreach ($announcements as $ann): ?>
+      <?php $ann_date = date('M d, Y', strtotime($ann['created_at'])); ?>
+      <article class="announcement">
+        <div>
+          <h3><?php echo htmlspecialchars($ann['title']); ?></h3>
+          <p><?php echo htmlspecialchars(mb_strimwidth($ann['content'], 0, 110, '...')); ?></p>
+        </div>
+        <span class="announcement-date"><?php echo strtoupper($ann_date); ?></span>
+      </article>
+    <?php endforeach; ?>
   </section>
 </main>
 <?php
