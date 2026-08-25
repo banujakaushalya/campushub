@@ -1,17 +1,33 @@
 <?php
-// Simple header include with dynamic navigation
-if (session_status() === PHP_SESSION_NONE) {
-  session_start();
+// Start session if not started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
 }
 
-// Calculate base path for reliable links across root and subdirectories in XAMPP
-$current_dir = basename(dirname($_SERVER['PHP_SELF']));
-$root_prefix = ($current_dir === 'admin' || $current_dir === 'student' || $current_dir === 'views') ? '../' : './';
-$current_page = basename($_SERVER['PHP_SELF']);
+// Simple path helper for subfolders (easy for viva defense)
+$path = "./";
+if (file_exists("../includes/header.php")) {
+    $path = "../";
+}
 
-$is_logged_in = !empty($_SESSION['user_id']);
-$user_name = $is_logged_in ? ($_SESSION['user_name'] ?? 'User') : '';
-$user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
+// Check user login session variables
+$is_logged_in = false;
+$user_name = "";
+$user_role = "";
+
+if (isset($_SESSION['user_id'])) {
+    $is_logged_in = true;
+    if (isset($_SESSION['user_name'])) {
+        $user_name = $_SESSION['user_name'];
+    } else {
+        $user_name = "User";
+    }
+    if (isset($_SESSION['role'])) {
+        $user_role = $_SESSION['role'];
+    } else {
+        $user_role = "student";
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -20,19 +36,23 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CampusHub - Student Services System</title>
-  <link rel="stylesheet" href="<?php echo $root_prefix; ?>assets/css/style.css">
+  <link rel="stylesheet" href="<?php echo $path; ?>assets/css/style.css">
 </head>
 
 <body>
   <header class="main-header">
     <style>
       .main-header {
+        position: relative;
+        z-index: 9999;
         width: 100%;
         padding: 12px 24px 0;
         box-sizing: border-box;
       }
 
       .nav-bar {
+        position: relative;
+        z-index: 9999;
         background-color: rgba(86, 131, 127, 0.35);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(12px);
@@ -229,13 +249,13 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
       .account-dropdown {
         display: none;
         position: absolute;
-        top: calc(100% + 10px);
+        top: calc(100% + 12px);
         right: 0;
-        z-index: 1000;
-        min-width: 190px;
+        z-index: 10000;
+        min-width: 200px;
         background-color: #ffffff;
         border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
         border: 1px solid #eaeaf0;
         flex-direction: column;
         overflow: hidden;
@@ -243,10 +263,10 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
 
       .account-dropdown a {
         display: block;
-        padding: 10px 16px;
+        padding: 11px 18px;
         text-decoration: none;
         color: #2b354f;
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         font-weight: 600;
         border-bottom: 1px solid #f2f2f6;
         transition: background-color 0.15s ease;
@@ -293,74 +313,73 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
     </style>
 
     <nav class="nav-bar">
-      <a href="<?php echo $root_prefix; ?>index.php" class="nav-logo">CampusHub</a>
+      <a href="<?php echo $path; ?>index.php" class="nav-logo">CampusHub</a>
 
       <div class="nav-links">
-        <a href="<?php echo $root_prefix; ?>index.php" class="<?php echo ($current_page === 'index.php') ? 'active' : ''; ?>">Home</a>
-        <a href="<?php echo $root_prefix; ?>about.php" class="<?php echo ($current_page === 'about.php') ? 'active' : ''; ?>">About</a>
+        <a href="<?php echo $path; ?>index.php">Home</a>
+        <a href="<?php echo $path; ?>about.php">About</a>
 
-        <?php if ($is_logged_in && $user_role === 'admin'): ?>
+        <?php if ($is_logged_in == true && $user_role == "admin"): ?>
           <!-- Admin Internal Navigations -->
-          <a href="<?php echo $root_prefix; ?>admin/dashboard.php" class="<?php echo ($current_page === 'dashboard.php' && $current_dir === 'admin') ? 'active' : ''; ?>">Admin Panel</a>
-          <a href="<?php echo $root_prefix; ?>admin/manage_events.php" class="<?php echo ($current_page === 'manage_events.php') ? 'active' : ''; ?>">Events</a>
-          <a href="<?php echo $root_prefix; ?>admin/manage_students.php" class="<?php echo ($current_page === 'manage_students.php') ? 'active' : ''; ?>">Students</a>
-          <a href="<?php echo $root_prefix; ?>admin/manage_registrations.php" class="<?php echo ($current_page === 'manage_registrations.php') ? 'active' : ''; ?>">Registrations</a>
-          <a href="<?php echo $root_prefix; ?>announcements.php" class="<?php echo ($current_page === 'announcements.php') ? 'active' : ''; ?>">Notices</a>
+          <a href="<?php echo $path; ?>admin/dashboard.php">Admin Panel</a>
+          <a href="<?php echo $path; ?>admin/manage_events.php">Events</a>
+          <a href="<?php echo $path; ?>admin/manage_students.php">Students</a>
+          <a href="<?php echo $path; ?>admin/manage_registrations.php">Registrations</a>
+          <a href="<?php echo $path; ?>announcements.php">Notices</a>
 
-        <?php elseif ($is_logged_in && $user_role === 'student'): ?>
+        <?php elseif ($is_logged_in == true && $user_role == "student"): ?>
           <!-- Student Internal Navigations -->
-          <a href="<?php echo $root_prefix; ?>student/events.php" class="<?php echo ($current_page === 'events.php') ? 'active' : ''; ?>">Events</a>
-          <a href="<?php echo $root_prefix; ?>student/my_registrations.php" class="<?php echo ($current_page === 'my_registrations.php') ? 'active' : ''; ?>">My Registrations</a>
-          <a href="<?php echo $root_prefix; ?>announcements.php" class="<?php echo ($current_page === 'announcements.php') ? 'active' : ''; ?>">Announcements</a>
-          <a href="<?php echo $root_prefix; ?>student/upload_photo.php" class="<?php echo ($current_page === 'upload_photo.php') ? 'active' : ''; ?>">Gallery Upload</a>
-          <a href="<?php echo $root_prefix; ?>contact.php" class="<?php echo ($current_page === 'contact.php') ? 'active' : ''; ?>">Contact</a>
+          <a href="<?php echo $path; ?>student/events.php">Events</a>
+          <a href="<?php echo $path; ?>student/my_registrations.php">My Registrations</a>
+          <a href="<?php echo $path; ?>announcements.php">Announcements</a>
+          <a href="<?php echo $path; ?>student/upload_photo.php">Gallery Upload</a>
+          <a href="<?php echo $path; ?>contact.php">Contact</a>
 
         <?php else: ?>
           <!-- Public Guest Navigation -->
-          <a href="<?php echo $root_prefix; ?>student/events.php" class="<?php echo ($current_page === 'events.php') ? 'active' : ''; ?>">Events</a>
-          <a href="<?php echo $root_prefix; ?>announcements.php" class="<?php echo ($current_page === 'announcements.php') ? 'active' : ''; ?>">Announcements</a>
-          <a href="<?php echo $root_prefix; ?>contact.php" class="<?php echo ($current_page === 'contact.php') ? 'active' : ''; ?>">Contact</a>
+          <a href="<?php echo $path; ?>student/events.php">Events</a>
+          <a href="<?php echo $path; ?>announcements.php">Announcements</a>
+          <a href="<?php echo $path; ?>contact.php">Contact</a>
         <?php endif; ?>
       </div>
 
       <div class="nav-account">
-        <?php if ($is_logged_in): ?>
+        <?php if ($is_logged_in == true): ?>
           <!-- Logged In User Account View -->
           <div class="acc-container">
             <div class="user-image">
-              <img src="<?php echo $root_prefix; ?>assets/images/user.png" alt="User">
+              <img src="<?php echo $path; ?>assets/images/user.png" alt="User">
             </div>
             <div class="user-details">
               <span class="user-name"><?php echo htmlspecialchars($user_name); ?></span>
               <span class="user-role-badge"><?php echo htmlspecialchars($user_role); ?></span>
             </div>
             <div class="account-menu">
-              <button class="account-btn" id="accountMenuBtn" aria-label="Toggle user menu">
-                <img src="<?php echo $root_prefix; ?>assets/images/menu.png" alt="Menu">
+              <button class="account-btn" id="accountMenuBtn" type="button" aria-label="Toggle user menu">
+                <img src="<?php echo $path; ?>assets/images/menu.png" alt="Menu">
               </button>
 
               <div class="account-dropdown" id="accountDropdown">
-                <?php if ($user_role === 'admin'): ?>
-                  <a href="<?php echo $root_prefix; ?>admin/dashboard.php">Dashboard</a>
-                  <a href="<?php echo $root_prefix; ?>admin/add_event.php">Add New Event</a>
-                  <a href="<?php echo $root_prefix; ?>admin/manage_announcements.php">Announcements</a>
-                  <a href="<?php echo $root_prefix; ?>admin/upload_media.php">Upload Media</a>
-                  <a href="<?php echo $root_prefix; ?>admin/export_events.php">Export XML Feed</a>
+                <?php if ($user_role == "admin"): ?>
+                  <a href="<?php echo $path; ?>admin/dashboard.php">Dashboard</a>
+                  <a href="<?php echo $path; ?>admin/add_event.php">Add New Event</a>
+                  <a href="<?php echo $path; ?>admin/manage_announcements.php">Announcements</a>
+                  <a href="<?php echo $path; ?>admin/upload_media.php">Upload Media</a>
                 <?php else: ?>
-                  <a href="<?php echo $root_prefix; ?>student/dashboard.php">My Dashboard</a>
-                  <a href="<?php echo $root_prefix; ?>student/profile.php">My Profile</a>
-                  <a href="<?php echo $root_prefix; ?>student/my_registrations.php">My Registrations</a>
-                  <a href="<?php echo $root_prefix; ?>student/upload_photo.php">Upload Activity Photos</a>
+                  <a href="<?php echo $path; ?>student/dashboard.php">My Dashboard</a>
+                  <a href="<?php echo $path; ?>student/profile.php">My Profile</a>
+                  <a href="<?php echo $path; ?>student/my_registrations.php">My Registrations</a>
+                  <a href="<?php echo $path; ?>student/upload_photo.php">Upload Activity Photos</a>
                 <?php endif; ?>
-                <a href="<?php echo $root_prefix; ?>logout.php" class="logout-link">Logout</a>
+                <a href="<?php echo $path; ?>logout.php" class="logout-link">Logout</a>
               </div>
             </div>
           </div>
         <?php else: ?>
           <!-- Guest Non-Logged In Action Buttons -->
           <div class="nav-buttons">
-            <a href="<?php echo $root_prefix; ?>login.php" class="btn-nav-login">Login</a>
-            <a href="<?php echo $root_prefix; ?>login.php?tab=signup" class="btn-nav-signup">Sign Up</a>
+            <a href="<?php echo $path; ?>login.php" class="btn-nav-login">Login</a>
+            <a href="<?php echo $path; ?>login.php?tab=signup" class="btn-nav-signup">Sign Up</a>
           </div>
         <?php endif; ?>
       </div>
@@ -368,16 +387,20 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
   </header>
 
   <script>
-    const accountBtn = document.getElementById('accountMenuBtn');
-    const accountDropdown = document.getElementById('accountDropdown');
+    var accountBtn = document.getElementById('accountMenuBtn');
+    var accountDropdown = document.getElementById('accountDropdown');
 
     if (accountBtn && accountDropdown) {
-      accountBtn.addEventListener('click', (e) => {
+      accountBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        accountDropdown.style.display = accountDropdown.style.display === 'flex' ? 'none' : 'flex';
+        if (accountDropdown.style.display === 'flex') {
+          accountDropdown.style.display = 'none';
+        } else {
+          accountDropdown.style.display = 'flex';
+        }
       });
 
-      document.addEventListener('click', (event) => {
+      document.addEventListener('click', function(event) {
         if (!accountBtn.contains(event.target) && !accountDropdown.contains(event.target)) {
           accountDropdown.style.display = 'none';
         }

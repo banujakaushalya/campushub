@@ -1,7 +1,9 @@
 <?php
 // Simple footer include
-$current_dir = basename(dirname($_SERVER['PHP_SELF']));
-$root_prefix = ($current_dir === 'admin' || $current_dir === 'student' || $current_dir === 'views') ? '../' : './';
+$path = "./";
+if (file_exists("../includes/header.php")) {
+    $path = "../";
+}
 ?>
 <footer class="site-footer">
   <style>
@@ -98,17 +100,17 @@ $root_prefix = ($current_dir === 'admin' || $current_dir === 'student' || $curre
 
     <nav class="footer-links" aria-label="Footer navigation">
       <h3>Explore</h3>
-      <a href="<?php echo $root_prefix; ?>index.php">Home</a>
-      <a href="<?php echo $root_prefix; ?>about.php">About</a>
-      <a href="<?php echo $root_prefix; ?>announcements.php">Announcements</a>
-      <a href="<?php echo $root_prefix; ?>contact.php">Contact</a>
+      <a href="<?php echo $path; ?>index.php">Home</a>
+      <a href="<?php echo $path; ?>about.php">About</a>
+      <a href="<?php echo $path; ?>announcements.php">Announcements</a>
+      <a href="<?php echo $path; ?>contact.php">Contact</a>
     </nav>
 
     <div class="socials">
       <h3>Portals</h3>
-      <a href="<?php echo $root_prefix; ?>student/events.php">Student Events</a>
-      <a href="<?php echo $root_prefix; ?>student/dashboard.php">Student Portal</a>
-      <a href="<?php echo $root_prefix; ?>admin/dashboard.php">Admin Portal</a>
+      <a href="<?php echo $path; ?>student/events.php">Student Events</a>
+      <a href="<?php echo $path; ?>student/dashboard.php">Student Portal</a>
+      <a href="<?php echo $path; ?>admin/dashboard.php">Admin Portal</a>
     </div>
 
   </div>
