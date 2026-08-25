@@ -1,5 +1,7 @@
 <?php
 // Simple footer include
+$current_dir = basename(dirname($_SERVER['PHP_SELF']));
+$root_prefix = ($current_dir === 'admin' || $current_dir === 'student' || $current_dir === 'views') ? '../' : './';
 ?>
 <footer class="site-footer">
   <style>
@@ -96,18 +98,19 @@
 
     <nav class="footer-links" aria-label="Footer navigation">
       <h3>Explore</h3>
-      <a href="/index.php">Home</a>
-      <a href="/about.php">About</a>
-      <a href="/announcements.php">Announcements</a>
-      <a href="/contact.php">Contact</a>
+      <a href="<?php echo $root_prefix; ?>index.php">Home</a>
+      <a href="<?php echo $root_prefix; ?>about.php">About</a>
+      <a href="<?php echo $root_prefix; ?>announcements.php">Announcements</a>
+      <a href="<?php echo $root_prefix; ?>contact.php">Contact</a>
     </nav>
 
     <div class="socials">
-      <h3>Connect</h3>
-      <a href="/media/gallery.php">Photo gallery</a>
-      <a href="/media/videos.php">Campus videos</a>
-      <a href="mailto:hello@campushub.local">Email us</a>
+      <h3>Portals</h3>
+      <a href="<?php echo $root_prefix; ?>student/events.php">Student Events</a>
+      <a href="<?php echo $root_prefix; ?>student/dashboard.php">Student Portal</a>
+      <a href="<?php echo $root_prefix; ?>admin/dashboard.php">Admin Portal</a>
     </div>
+
   </div>
   <div class="footer-bottom">&copy; <?php echo date('Y'); ?> CampusHub. All rights reserved.</div>
 </footer>

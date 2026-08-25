@@ -1,2 +1,17 @@
+# Environment config & uploads
 includes/config.php
 media/uploads/
+assets/uploads/
+
+# AI Studio Dev Server Bridge & Node files (Not needed in local XAMPP)
+node_modules/
+package.json
+package-lock.json
+server.ts
+metadata.json
+.dev.env.json
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
