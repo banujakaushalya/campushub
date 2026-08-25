@@ -24,36 +24,45 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
 </head>
 
 <body>
-  <header>
+  <header class="main-header">
     <style>
+      .main-header {
+        width: 100%;
+        padding: 12px 24px 0;
+        box-sizing: border-box;
+      }
+
       .nav-bar {
-        background-color: rgba(86, 131, 127, 0.32);
+        background-color: rgba(86, 131, 127, 0.35);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        color: #454654;
+        color: #2b354f;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 16px;
         min-height: 64px;
         width: 100%;
-        max-width: 1240px;
-        margin: 12px auto 0;
-        padding: 0 16px;
+        margin: 0 auto;
+        padding: 6px clamp(14px, 2vw, 32px);
         box-sizing: border-box;
-        border-radius: 12px;
+        border-radius: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       }
 
       .nav-logo {
         display: flex;
         align-items: center;
-        font-size: 1.8rem;
+        font-size: 1.85rem;
         color: #ffffff;
+        font-family: 'Archivo Black', sans-serif;
         font-weight: bold;
-        text-shadow: #FF6B4A 1px 1px 2px;
+        text-shadow: #FF6B4A 1px 1px 3px;
         text-decoration: none;
         letter-spacing: -0.5px;
+        flex-shrink: 0;
       }
 
       .nav-logo:hover {
@@ -62,35 +71,41 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
 
       .nav-links {
         display: flex;
-        gap: 18px;
+        flex: 1;
+        justify-content: center;
         align-items: center;
-        margin: 0 16px;
+        gap: 6px 14px;
+        flex-wrap: wrap;
+        margin: 0 10px;
       }
 
       .nav-links a {
         text-decoration: none;
-        color: #2b354f;
+        color: #1e2638;
         font-weight: 700;
-        font-size: 0.95rem;
-        padding: 6px 10px;
-        border-radius: 6px;
+        font-size: 0.92rem;
+        padding: 7px 12px;
+        border-radius: 8px;
+        white-space: nowrap;
         transition: all 0.2s ease;
       }
 
       .nav-links a:hover {
         color: #FF6B4A;
-        background-color: rgba(255, 255, 255, 0.4);
+        background-color: rgba(255, 255, 255, 0.5);
       }
 
       .nav-links a.active {
         color: #FF6B4A;
-        background-color: rgba(255, 255, 255, 0.6);
+        background-color: rgba(255, 255, 255, 0.75);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       }
 
       .nav-account {
         display: flex;
         align-items: center;
         gap: 12px;
+        flex-shrink: 0;
       }
 
       /* Guest Login/Signup Buttons */
@@ -104,13 +119,14 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
       .btn-nav-signup {
         display: inline-block;
         padding: 8px 18px;
-        border-radius: 6px;
-        font-weight: bold;
+        border-radius: 8px;
+        font-weight: 700;
         font-size: 0.9rem;
         text-decoration: none;
         cursor: pointer;
         transition: all 0.2s ease;
         border: none;
+        white-space: nowrap;
       }
 
       .btn-nav-login {
@@ -128,7 +144,7 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
       .btn-nav-signup {
         background-color: #FF6B4A;
         color: #ffffff;
-        box-shadow: 0 2px 6px rgba(255, 107, 74, 0.3);
+        box-shadow: 0 2px 8px rgba(255, 107, 74, 0.35);
       }
 
       .btn-nav-signup:hover {
@@ -142,15 +158,16 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
         flex-direction: row;
         align-items: center;
         gap: 10px;
-        background-color: rgba(255, 255, 255, 0.5);
-        padding: 5px 12px;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background-color: rgba(255, 255, 255, 0.65);
+        padding: 4px 12px 4px 6px;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
       }
 
       .user-image img {
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid #FF6B4A;
@@ -164,9 +181,9 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
       }
 
       .user-name {
-        font-weight: bold;
-        color: #2b354f;
-        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e2638;
+        font-size: 0.88rem;
         max-width: 140px;
         white-space: nowrap;
         overflow: hidden;
@@ -174,7 +191,7 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
       }
 
       .user-role-badge {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         text-transform: uppercase;
         color: #FF6B4A;
         font-weight: 800;
@@ -191,10 +208,12 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
         background-color: transparent;
         border: none;
         cursor: pointer;
-        padding: 4px;
+        padding: 5px;
         display: flex;
         align-items: center;
-        border-radius: 4px;
+        justify-content: center;
+        border-radius: 6px;
+        transition: background-color 0.15s ease;
       }
 
       .account-btn:hover {
@@ -202,20 +221,21 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
       }
 
       .account-btn img {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
+        display: block;
       }
 
       .account-dropdown {
         display: none;
         position: absolute;
-        top: calc(100% + 8px);
+        top: calc(100% + 10px);
         right: 0;
         z-index: 1000;
-        min-width: 180px;
+        min-width: 190px;
         background-color: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         border: 1px solid #eaeaf0;
         flex-direction: column;
         overflow: hidden;
@@ -249,19 +269,23 @@ $user_role = $is_logged_in ? ($_SESSION['role'] ?? 'student') : '';
         background-color: #ffeaea;
       }
 
-      @media (max-width: 860px) {
+      @media (max-width: 992px) {
+        .main-header {
+          padding: 8px 12px 0;
+        }
+
         .nav-bar {
           flex-wrap: wrap;
           padding: 10px 14px;
-          gap: 8px;
+          gap: 10px;
         }
+
         .nav-links {
           order: 3;
           width: 100%;
           justify-content: center;
-          gap: 10px;
-          flex-wrap: wrap;
-          margin: 6px 0 0;
+          gap: 8px 12px;
+          margin: 4px 0 0;
           padding-top: 8px;
           border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
