@@ -9,70 +9,6 @@ if ($events_result && $events_result->num_rows > 0) {
     while ($row = $events_result->fetch_assoc()) {
         $events[] = $row;
     }
-} else {
-    // Beginner fallback sample events if database is loading or empty
-    $events = [
-        [
-            'event_id' => 1,
-            'title' => 'Tech Coding Workshop',
-            'description' => 'Build practical skills with a hands-on session led by student developers.',
-            'category' => 'Workshop',
-            'event_date' => '2026-04-18',
-            'event_time' => '10:00:00',
-            'location' => 'Lab 04, Tech Campus',
-            'banner_image' => 'tech_coding_work_shop.jpg'
-        ],
-        [
-            'event_id' => 2,
-            'title' => 'Design Thinking Lab',
-            'description' => 'Turn a bright idea into a thoughtful solution alongside your peers.',
-            'category' => 'Workshop',
-            'event_date' => '2026-04-22',
-            'event_time' => '14:00:00',
-            'location' => 'Design Studio 2',
-            'banner_image' => 'tech_coding_work_shop.jpg'
-        ],
-        [
-            'event_id' => 3,
-            'title' => 'Campus Creative Night',
-            'description' => 'Share music, art, and stories in an open evening for the whole campus.',
-            'category' => 'Cultural',
-            'event_date' => '2026-04-25',
-            'event_time' => '17:30:00',
-            'location' => 'Open Amphitheatre',
-            'banner_image' => 'tech_coding_work_shop.jpg'
-        ],
-        [
-            'event_id' => 4,
-            'title' => 'Career Conversations',
-            'description' => 'Meet local professionals and ask the questions that shape your next step.',
-            'category' => 'Career',
-            'event_date' => '2026-04-29',
-            'event_time' => '11:00:00',
-            'location' => 'Auditorium B',
-            'banner_image' => 'tech_coding_work_shop.jpg'
-        ],
-        [
-            'event_id' => 5,
-            'title' => 'Community Volunteer Day',
-            'description' => 'Spend a morning making a tangible difference with campus organizations.',
-            'category' => 'Community',
-            'event_date' => '2026-05-03',
-            'event_time' => '09:00:00',
-            'location' => 'Campus Green Grounds',
-            'banner_image' => 'tech_coding_work_shop.jpg'
-        ],
-        [
-            'event_id' => 6,
-            'title' => 'Student Founder Meetup',
-            'description' => 'Connect with ambitious builders, founders, and future collaborators.',
-            'category' => 'Competition',
-            'event_date' => '2026-05-07',
-            'event_time' => '18:00:00',
-            'location' => 'Innovation Hub',
-            'banner_image' => 'tech_coding_work_shop.jpg'
-        ]
-    ];
 }
 
 // Fetch announcements
@@ -82,27 +18,6 @@ if ($ann_result && $ann_result->num_rows > 0) {
     while ($row = $ann_result->fetch_assoc()) {
         $announcements[] = $row;
     }
-} else {
-    $announcements = [
-        [
-            'announcement_id' => 1,
-            'title' => 'Spring event registration is now open',
-            'content' => 'Browse the calendar and reserve your place at the events that interest you most.',
-            'created_at' => '2026-04-10'
-        ],
-        [
-            'announcement_id' => 2,
-            'title' => 'Club activities schedule for Semester 1',
-            'content' => 'All society leadership meetings and initial orientation workshops are published.',
-            'created_at' => '2026-04-08'
-        ],
-        [
-            'announcement_id' => 3,
-            'title' => 'Campus transport timings update',
-            'content' => 'Shuttle service routes between Java Institute hubs have been revised.',
-            'created_at' => '2026-04-05'
-        ]
-    ];
 }
 ?>
 <main class="page-container">
@@ -358,27 +273,34 @@ if ($ann_result && $ann_result->num_rows > 0) {
       <p>Showing <?php echo count($events); ?> upcoming events</p>
     </div>
 
-    <div class="event-container">
-      <?php foreach ($events as $event): ?>
-        <?php
-          $formatted_date = date('M d, Y', strtotime($event['event_date']));
-          $formatted_time = date('g:i A', strtotime($event['event_time']));
-        ?>
-        <a href="student/event_details.php?id=<?php echo htmlspecialchars($event['event_id']); ?>" class="event-card">
-          <div class="img-container"></div>
-          <div class="event-info">
-            <p class="event-meta"><?php echo strtoupper($formatted_date); ?> · <?php echo $formatted_time; ?></p>
-            <h3><?php echo htmlspecialchars($event['title']); ?></h3>
-            <p><?php echo htmlspecialchars(mb_strimwidth($event['description'], 0, 95, '...')); ?></p>
-          </div>
-        </a>
-      <?php endforeach; ?>
-    </div>
+    <?php if (!empty($events)): ?>
+      <div class="event-container">
+        <?php foreach ($events as $event): ?>
+          <?php
+            $formatted_date = date('M d, Y', strtotime($event['event_date']));
+            $formatted_time = date('g:i A', strtotime($event['event_time']));
+          ?>
+          <a href="student/event_details.php?id=<?php echo htmlspecialchars($event['event_id']); ?>" class="event-card">
+            <div class="img-container"></div>
+            <div class="event-info">
+              <p class="event-meta"><?php echo strtoupper($formatted_date); ?> · <?php echo $formatted_time; ?></p>
+              <h3><?php echo htmlspecialchars($event['title']); ?></h3>
+              <p><?php echo htmlspecialchars(mb_strimwidth($event['description'], 0, 95, '...')); ?></p>
+            </div>
+          </a>
+        <?php endforeach; ?>
+      </div>
 
-    <nav class="pagination-container" aria-label="Event pages">
-      <a class="page-link active" href="index.php">1</a>
-      <a class="page-link" href="student/events.php">Browse All Events &raquo;</a>
-    </nav>
+      <nav class="pagination-container" aria-label="Event pages">
+        <a class="page-link active" href="index.php">1</a>
+        <a class="page-link" href="student/events.php">Browse All Events &raquo;</a>
+      </nav>
+    <?php else: ?>
+      <div style="background: #ffffff; border: 1px solid var(--line); border-radius: 12px; padding: 36px; text-align: center; color: var(--muted); margin-top: 16px;">
+        <p style="font-size: 1.1rem; margin: 0 0 8px; color: var(--ink); font-weight: bold;">No Upcoming Events Found</p>
+        <p style="margin: 0;">There are currently no upcoming events registered in the system database.</p>
+      </div>
+    <?php endif; ?>
   </section>
 
   <section class="content-section" aria-labelledby="latest-announcement-title">
@@ -390,16 +312,23 @@ if ($ann_result && $ann_result->num_rows > 0) {
       <p><a href="announcements.php" style="color: var(--coral); text-decoration: none; font-weight: bold;">View All &raquo;</a></p>
     </div>
 
-    <?php foreach ($announcements as $ann): ?>
-      <?php $ann_date = date('M d, Y', strtotime($ann['created_at'])); ?>
-      <article class="announcement">
-        <div>
-          <h3><?php echo htmlspecialchars($ann['title']); ?></h3>
-          <p><?php echo htmlspecialchars(mb_strimwidth($ann['content'], 0, 110, '...')); ?></p>
-        </div>
-        <span class="announcement-date"><?php echo strtoupper($ann_date); ?></span>
-      </article>
-    <?php endforeach; ?>
+    <?php if (!empty($announcements)): ?>
+      <?php foreach ($announcements as $ann): ?>
+        <?php $ann_date = date('M d, Y', strtotime($ann['created_at'])); ?>
+        <article class="announcement">
+          <div>
+            <h3><?php echo htmlspecialchars($ann['title']); ?></h3>
+            <p><?php echo htmlspecialchars(mb_strimwidth($ann['content'], 0, 110, '...')); ?></p>
+          </div>
+          <span class="announcement-date"><?php echo strtoupper($ann_date); ?></span>
+        </article>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <div style="background: #ffffff; border: 1px solid var(--line); border-radius: 12px; padding: 36px; text-align: center; color: var(--muted); margin-top: 16px;">
+        <p style="font-size: 1.1rem; margin: 0 0 8px; color: var(--ink); font-weight: bold;">No Announcements Found</p>
+        <p style="margin: 0;">No active circulars or announcements posted in the database.</p>
+      </div>
+    <?php endif; ?>
   </section>
 </main>
 <?php

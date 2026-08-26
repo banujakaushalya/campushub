@@ -20,11 +20,12 @@ if ($filter_category !== 'all' && !empty($filter_category)) {
 }
 
 if (!empty($search_query)) {
-    $sql .= " AND (title LIKE ? OR content LIKE ?)";
+    $sql .= " AND (title LIKE ? OR content LIKE ? OR meta_data LIKE ?)";
     $like = "%" . $search_query . "%";
     $params[] = $like;
     $params[] = $like;
-    $types .= "ss";
+    $params[] = $like;
+    $types .= "sss";
 }
 
 $sql .= " ORDER BY created_at DESC";
@@ -36,34 +37,6 @@ if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $announcements[] = $row;
     }
-} else {
-    // Beginner fallback sample announcements if DB table is empty or loading
-    $announcements = [
-        [
-            'announcement_id' => 1,
-            'title' => 'Welcome to CampusHub 2026 Semester Portal',
-            'content' => 'The unified student portal is now live! Register for upcoming student club events, workshops, sports championships, and access multimedia resources.',
-            'category' => 'General',
-            'priority' => 'high',
-            'created_at' => date('Y-m-d H:i:s')
-        ],
-        [
-            'announcement_id' => 2,
-            'title' => 'Club Registration Deadline for Term 3',
-            'content' => 'All students wishing to join competitive societies (Computing, Robotics, Sports) must finalize registrations before the designated semester cutoff date.',
-            'category' => 'Clubs',
-            'priority' => 'medium',
-            'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))
-        ],
-        [
-            'announcement_id' => 3,
-            'title' => 'Inter-Campus Shuttle Transport Schedule Update',
-            'content' => 'Special shuttle buses will run between campuses for the upcoming Inter-University Sports Meet. Pickup locations are at the Main Gate.',
-            'category' => 'Logistics',
-            'priority' => 'low',
-            'created_at' => date('Y-m-d H:i:s', strtotime('-5 days'))
-        ]
-    ];
 }
 ?>
 <main class="page-container">

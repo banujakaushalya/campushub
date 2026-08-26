@@ -2,6 +2,13 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Check role permission: super_admin, admin, or moderator
+$curr_role = $_SESSION['role'] ?? 'guest';
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin' && $curr_role !== 'moderator') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
 $events = [];
 $res = Database::search("SELECT * FROM events ORDER BY event_date DESC");
 if ($res && $res->num_rows > 0) {

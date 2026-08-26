@@ -29,36 +29,6 @@ if ($res && $res->num_rows > 0) {
     while ($row = $res->fetch_assoc()) {
         $registrations[] = $row;
     }
-} else {
-    // Beginner fallback sample registrations
-    $registrations = [
-        [
-            'registration_id' => 1,
-            'status' => 'confirmed',
-            'notes' => 'Team lead for Team Alpha',
-            'registered_at' => date('Y-m-d H:i:s'),
-            'event_id' => 1,
-            'title' => 'Full-Stack Web Dev Hackathon 2026',
-            'category' => 'Competition',
-            'club_name' => 'Computing Society',
-            'event_date' => '2026-09-15',
-            'event_time' => '09:00:00',
-            'location' => 'Main Auditorium, Tech Campus'
-        ],
-        [
-            'registration_id' => 2,
-            'status' => 'confirmed',
-            'notes' => 'Interested in embedded systems',
-            'registered_at' => date('Y-m-d H:i:s', strtotime('-3 days')),
-            'event_id' => 2,
-            'title' => 'AI & Robotics Innovation Workshop',
-            'category' => 'Workshop',
-            'club_name' => 'Robotics Club',
-            'event_date' => '2026-09-22',
-            'event_time' => '14:00:00',
-            'location' => 'Lab 04, Innovation Wing'
-        ]
-    ];
 }
 ?>
 <main class="page-container">

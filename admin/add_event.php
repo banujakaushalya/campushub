@@ -2,6 +2,13 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Check role permission: super_admin, admin, or moderator
+$curr_role = $_SESSION['role'] ?? 'guest';
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin' && $curr_role !== 'moderator') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
 $success_msg = "";
 $error_msg = "";
 
@@ -14,14 +21,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $event_time = isset($_POST['event_time']) ? trim($_POST['event_time']) : '09:00:00';
     $location = isset($_POST['location']) ? trim($_POST['location']) : '';
     $max_participants = isset($_POST['max_participants']) ? (int)$_POST['max_participants'] : 50;
+    $tags = isset($_POST['tags']) ? trim($_POST['tags']) : '';
+
+    $meta_json = json_encode(['tags' => array_filter(array_map('trim', explode(',', $tags)))]);
 
     if (empty($title) || empty($description) || empty($event_date) || empty($location)) {
         $error_msg = "Please fill in all mandatory fields (Title, Description, Date, Location).";
     } else {
         $inserted = Database::iud(
-            "INSERT INTO events (title, description, category, club_name, event_date, event_time, location, max_participants, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')",
-            "sssssssi",
-            [$title, $description, $category, $club_name, $event_date, $event_time, $location, $max_participants]
+            "INSERT INTO events (title, description, category, club_name, event_date, event_time, location, max_participants, meta_data, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')",
+            "sssssssss",
+            [$title, $description, $category, $club_name, $event_date, $event_time, $location, $max_participants, $meta_json]
         );
 
         if ($inserted) {
@@ -222,6 +232,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <div class="form-group">
           <label for="description">Event Description *</label>
           <textarea id="description" name="description" class="form-control" rows="4" placeholder="Full details, agenda, and guidelines for students..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Hashtags / Search Keywords (Comma-separated)</label>
+          <input type="text" id="tags" name="tags" class="form-control" placeholder="#coding, #hackathon, #computing">
         </div>
 
         <button type="submit" class="btn-submit">Publish Event</button>

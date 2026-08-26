@@ -2,6 +2,13 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Check role permission: super_admin or admin
+$curr_role = $_SESSION['role'] ?? 'guest';
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
 $msg = "";
 
 // Handle status update
@@ -30,45 +37,6 @@ if ($res && $res->num_rows > 0) {
     while ($row = $res->fetch_assoc()) {
         $registrations[] = $row;
     }
-} else {
-    $registrations = [
-        [
-            'registration_id' => 1,
-            'first_name' => 'Kamal',
-            'last_name' => 'Perera',
-            'email' => 'kamal@student.edu',
-            'student_id' => 'JI-2024-042',
-            'event_title' => 'Full-Stack Web Dev Hackathon 2026',
-            'event_date' => '2026-09-15',
-            'registered_at' => date('Y-m-d H:i:s'),
-            'status' => 'confirmed',
-            'notes' => 'Team lead for Team Alpha'
-        ],
-        [
-            'registration_id' => 2,
-            'first_name' => 'Kamal',
-            'last_name' => 'Perera',
-            'email' => 'kamal@student.edu',
-            'student_id' => 'JI-2024-042',
-            'event_title' => 'AI & Robotics Innovation Workshop',
-            'event_date' => '2026-09-22',
-            'registered_at' => date('Y-m-d H:i:s', strtotime('-1 day')),
-            'status' => 'confirmed',
-            'notes' => 'Embedded systems'
-        ],
-        [
-            'registration_id' => 3,
-            'first_name' => 'Nimali',
-            'last_name' => 'Silva',
-            'email' => 'nimali@student.edu',
-            'student_id' => 'JI-2024-089',
-            'event_title' => 'Annual Inter-University Sports Meet',
-            'event_date' => '2026-10-05',
-            'registered_at' => date('Y-m-d H:i:s', strtotime('-3 days')),
-            'status' => 'confirmed',
-            'notes' => 'Badminton singles'
-        ]
-    ];
 }
 ?>
 <main class="page-container">

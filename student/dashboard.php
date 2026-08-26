@@ -2,30 +2,24 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
-$user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 2;
+$user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
 
 // Fetch user profile info
 $user_info = null;
-$u_res = Database::search("SELECT * FROM users WHERE user_id = ? LIMIT 1", "i", [$user_id]);
-if ($u_res && $u_res->num_rows > 0) {
-    $user_info = $u_res->fetch_assoc();
-} else {
-    $user_info = [
-        'first_name' => 'Kamal',
-        'last_name' => 'Perera',
-        'email' => 'kamal@student.edu',
-        'student_id' => 'JI-2024-042',
-        'institution' => 'Java Institute for Advanced Technology'
-    ];
+if ($user_id > 0) {
+    $u_res = Database::search("SELECT * FROM users WHERE user_id = ? LIMIT 1", "i", [$user_id]);
+    if ($u_res && $u_res->num_rows > 0) {
+        $user_info = $u_res->fetch_assoc();
+    }
 }
 
 // Count active registrations
 $reg_count = 0;
-$c_res = Database::search("SELECT COUNT(*) as total FROM registrations WHERE users_user_id = ? AND status = 'confirmed'", "i", [$user_id]);
-if ($c_res && $crow = $c_res->fetch_assoc()) {
-    $reg_count = (int)$crow['total'];
-} else {
-    $reg_count = 2;
+if ($user_id > 0) {
+    $c_res = Database::search("SELECT COUNT(*) as total FROM registrations WHERE users_user_id = ? AND status = 'confirmed'", "i", [$user_id]);
+    if ($c_res && $crow = $c_res->fetch_assoc()) {
+        $reg_count = (int)$crow['total'];
+    }
 }
 
 // Count upcoming campus events
@@ -33,8 +27,6 @@ $upcoming_count = 0;
 $e_res = Database::search("SELECT COUNT(*) as total FROM events WHERE status = 'upcoming'");
 if ($e_res && $erow = $e_res->fetch_assoc()) {
     $upcoming_count = (int)$erow['total'];
-} else {
-    $upcoming_count = 4;
 }
 
 // Count announcements
@@ -42,20 +34,20 @@ $ann_count = 0;
 $a_res = Database::search("SELECT COUNT(*) as total FROM announcements");
 if ($a_res && $arow = $a_res->fetch_assoc()) {
     $ann_count = (int)$arow['total'];
-} else {
-    $ann_count = 3;
 }
 
 // Fetch 2 next registered events
 $my_events = [];
-$m_res = Database::search("SELECT e.title, e.event_date, e.event_time, e.location, e.category 
-                          FROM registrations r 
-                          JOIN events e ON r.events_event_id = e.event_id 
-                          WHERE r.users_user_id = ? AND r.status = 'confirmed' 
-                          ORDER BY e.event_date ASC LIMIT 2", "i", [$user_id]);
-if ($m_res && $m_res->num_rows > 0) {
-    while ($mrow = $m_res->fetch_assoc()) {
-        $my_events[] = $mrow;
+if ($user_id > 0) {
+    $m_res = Database::search("SELECT e.title, e.event_date, e.event_time, e.location, e.category 
+                              FROM registrations r 
+                              JOIN events e ON r.events_event_id = e.event_id 
+                              WHERE r.users_user_id = ? AND r.status = 'confirmed' 
+                              ORDER BY e.event_date ASC LIMIT 2", "i", [$user_id]);
+    if ($m_res && $m_res->num_rows > 0) {
+        while ($mrow = $m_res->fetch_assoc()) {
+            $my_events[] = $mrow;
+        }
     }
 }
 ?>
@@ -309,6 +301,12 @@ if ($m_res && $m_res->num_rows > 0) {
         <div class="action-emoji">👤</div>
         <div class="action-label">My Profile</div>
         <div class="action-desc">Update contact details</div>
+      </a>
+
+      <a href="apply_role.php" class="action-btn-card">
+        <div class="action-emoji">🌟</div>
+        <div class="action-label">Apply for Role</div>
+        <div class="action-desc">Request Moderator / Admin role</div>
       </a>
     </div>
 

@@ -40,13 +40,13 @@ if ($res && $res->num_rows > 0) {
     $user = $res->fetch_assoc();
 } else {
     $user = [
-        'first_name' => 'Kamal',
-        'last_name' => 'Perera',
-        'email' => 'kamal@student.edu',
-        'phone' => '0719876543',
+        'first_name' => '',
+        'last_name' => '',
+        'email' => '',
+        'phone' => '',
         'gender' => 'male',
-        'student_id' => 'JI-2024-042',
-        'institution' => 'Java Institute for Advanced Technology'
+        'student_id' => '',
+        'institution' => ''
     ];
 }
 ?>

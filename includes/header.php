@@ -319,25 +319,38 @@ if (isset($_SESSION['user_id'])) {
         <a href="<?php echo $path; ?>index.php">Home</a>
         <a href="<?php echo $path; ?>about.php">About</a>
 
-        <?php if ($is_logged_in == true && $user_role == "admin"): ?>
-          <!-- Admin Internal Navigations -->
-          <a href="<?php echo $path; ?>admin/dashboard.php">Admin Panel</a>
+        <?php if ($is_logged_in == true && ($user_role == "super_admin" || $user_role == "admin")): ?>
+          <!-- Admin / Super Admin Internal Navigation -->
+          <a href="<?php echo $path; ?>admin/dashboard.php">Dashboard</a>
           <a href="<?php echo $path; ?>admin/manage_events.php">Events</a>
           <a href="<?php echo $path; ?>admin/manage_students.php">Students</a>
           <a href="<?php echo $path; ?>admin/manage_registrations.php">Registrations</a>
+          <a href="<?php echo $path; ?>admin/manage_roles.php">Roles & Approvals</a>
+          <a href="<?php echo $path; ?>announcements.php">Notices</a>
+          <a href="<?php echo $path; ?>gallery.php">Gallery</a>
+
+        <?php elseif ($is_logged_in == true && $user_role == "moderator"): ?>
+          <!-- Moderator Internal Navigation -->
+          <a href="<?php echo $path; ?>admin/dashboard.php">Mod Panel</a>
+          <a href="<?php echo $path; ?>admin/manage_events.php">Manage Events</a>
+          <a href="<?php echo $path; ?>admin/upload_media.php">Upload Media</a>
+          <a href="<?php echo $path; ?>gallery.php">Gallery</a>
           <a href="<?php echo $path; ?>announcements.php">Notices</a>
 
-        <?php elseif ($is_logged_in == true && $user_role == "student"): ?>
-          <!-- Student Internal Navigations -->
+        <?php elseif ($is_logged_in == true && ($user_role == "student" || $user_role == "teacher")): ?>
+          <!-- Student / Teacher Internal Navigation -->
           <a href="<?php echo $path; ?>student/events.php">Events</a>
           <a href="<?php echo $path; ?>student/my_registrations.php">My Registrations</a>
+          <a href="<?php echo $path; ?>gallery.php">Gallery</a>
           <a href="<?php echo $path; ?>announcements.php">Announcements</a>
-          <a href="<?php echo $path; ?>student/upload_photo.php">Gallery Upload</a>
+          <a href="<?php echo $path; ?>student/upload_photo.php">Upload Photos</a>
+          <a href="<?php echo $path; ?>student/apply_role.php">Apply for Role</a>
           <a href="<?php echo $path; ?>contact.php">Contact</a>
 
         <?php else: ?>
           <!-- Public Guest Navigation -->
           <a href="<?php echo $path; ?>student/events.php">Events</a>
+          <a href="<?php echo $path; ?>gallery.php">Gallery</a>
           <a href="<?php echo $path; ?>announcements.php">Announcements</a>
           <a href="<?php echo $path; ?>contact.php">Contact</a>
         <?php endif; ?>
@@ -352,7 +365,7 @@ if (isset($_SESSION['user_id'])) {
             </div>
             <div class="user-details">
               <span class="user-name"><?php echo htmlspecialchars($user_name); ?></span>
-              <span class="user-role-badge"><?php echo htmlspecialchars($user_role); ?></span>
+              <span class="user-role-badge"><?php echo htmlspecialchars(str_replace('_', ' ', $user_role)); ?></span>
             </div>
             <div class="account-menu">
               <button class="account-btn" id="accountMenuBtn" type="button" aria-label="Toggle user menu">
@@ -360,16 +373,30 @@ if (isset($_SESSION['user_id'])) {
               </button>
 
               <div class="account-dropdown" id="accountDropdown">
-                <?php if ($user_role == "admin"): ?>
-                  <a href="<?php echo $path; ?>admin/dashboard.php">Dashboard</a>
+                <?php if ($user_role == "super_admin"): ?>
+                  <a href="<?php echo $path; ?>admin/dashboard.php">Super Admin Dashboard</a>
+                  <a href="<?php echo $path; ?>master_control/index.php">Master Control Unit</a>
+                  <a href="<?php echo $path; ?>admin/manage_roles.php">Manage Admins & Mods</a>
+                  <a href="<?php echo $path; ?>admin/manage_events.php">Manage Events</a>
+                  <a href="<?php echo $path; ?>admin/organization_info.php">Organization Info</a>
+                <?php elseif ($user_role == "admin"): ?>
+                  <a href="<?php echo $path; ?>admin/dashboard.php">Admin Dashboard</a>
                   <a href="<?php echo $path; ?>admin/add_event.php">Add New Event</a>
-                  <a href="<?php echo $path; ?>admin/manage_announcements.php">Announcements</a>
+                  <a href="<?php echo $path; ?>admin/manage_roles.php">Declare / Add Moderators</a>
+                  <a href="<?php echo $path; ?>admin/manage_announcements.php">Manage Announcements</a>
+                  <a href="<?php echo $path; ?>admin/organization_info.php">Organization Info</a>
+                  <a href="<?php echo $path; ?>admin/upload_media.php">Upload Media</a>
+                <?php elseif ($user_role == "moderator"): ?>
+                  <a href="<?php echo $path; ?>admin/dashboard.php">Moderator Dashboard</a>
+                  <a href="<?php echo $path; ?>admin/manage_events.php">Manage Events</a>
+                  <a href="<?php echo $path; ?>admin/add_event.php">Add New Event</a>
                   <a href="<?php echo $path; ?>admin/upload_media.php">Upload Media</a>
                 <?php else: ?>
                   <a href="<?php echo $path; ?>student/dashboard.php">My Dashboard</a>
                   <a href="<?php echo $path; ?>student/profile.php">My Profile</a>
                   <a href="<?php echo $path; ?>student/my_registrations.php">My Registrations</a>
-                  <a href="<?php echo $path; ?>student/upload_photo.php">Upload Activity Photos</a>
+                  <a href="<?php echo $path; ?>student/upload_photo.php">Upload Photos</a>
+                  <a href="<?php echo $path; ?>student/apply_role.php">Apply for Mod/Admin</a>
                 <?php endif; ?>
                 <a href="<?php echo $path; ?>logout.php" class="logout-link">Logout</a>
               </div>

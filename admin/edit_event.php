@@ -2,7 +2,14 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
-$event_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
+// Check role permission: super_admin, admin, or moderator
+$curr_role = $_SESSION['role'] ?? 'guest';
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin' && $curr_role !== 'moderator') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
+$event_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $success_msg = "";
 $error_msg = "";
 
@@ -16,14 +23,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $location = isset($_POST['location']) ? trim($_POST['location']) : '';
     $max_participants = isset($_POST['max_participants']) ? (int)$_POST['max_participants'] : 50;
     $status = isset($_POST['status']) ? trim($_POST['status']) : 'upcoming';
+    $tags = isset($_POST['tags']) ? trim($_POST['tags']) : '';
+
+    $meta_json = json_encode(['tags' => array_filter(array_map('trim', explode(',', $tags)))]);
 
     if (empty($title) || empty($description) || empty($event_date) || empty($location)) {
         $error_msg = "Please fill in all mandatory fields.";
     } else {
         $updated = Database::iud(
-            "UPDATE events SET title = ?, description = ?, category = ?, club_name = ?, event_date = ?, event_time = ?, location = ?, max_participants = ?, status = ? WHERE event_id = ?",
-            "sssssssisi",
-            [$title, $description, $category, $club_name, $event_date, $event_time, $location, $max_participants, $status, $event_id]
+            "UPDATE events SET title = ?, description = ?, category = ?, club_name = ?, event_date = ?, event_time = ?, location = ?, max_participants = ?, meta_data = ?, status = ? WHERE event_id = ?",
+            "ssssssssssi",
+            [$title, $description, $category, $club_name, $event_date, $event_time, $location, $max_participants, $meta_json, $status, $event_id]
         );
 
         if ($updated) {
@@ -36,21 +46,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 // Fetch event
 $event = null;
-$res = Database::search("SELECT * FROM events WHERE event_id = ? LIMIT 1", "i", [$event_id]);
-if ($res && $res->num_rows > 0) {
-    $event = $res->fetch_assoc();
-} else {
-    $event = [
-        'title' => 'Sample Event',
-        'description' => 'Event description',
-        'category' => 'Workshop',
-        'club_name' => 'Tech Club',
-        'event_date' => '2026-09-15',
-        'event_time' => '09:00:00',
-        'location' => 'Main Auditorium',
-        'max_participants' => 80,
-        'status' => 'upcoming'
-    ];
+if ($event_id > 0) {
+    $res = Database::search("SELECT * FROM events WHERE event_id = ? LIMIT 1", "i", [$event_id]);
+    if ($res && $res->num_rows > 0) {
+        $event = $res->fetch_assoc();
+    }
+}
+
+// Extract existing tags from meta_data
+$existing_tags_str = "";
+if ($event && !empty($event['meta_data'])) {
+    $meta_arr = json_decode($event['meta_data'], true);
+    if (isset($meta_arr['tags']) && is_array($meta_arr['tags'])) {
+        $existing_tags_str = implode(', ', $meta_arr['tags']);
+    }
 }
 ?>
 <main class="page-container">
@@ -251,6 +260,11 @@ if ($res && $res->num_rows > 0) {
         <div class="form-group">
           <label for="description">Event Description *</label>
           <textarea id="description" name="description" class="form-control" rows="4" required><?php echo htmlspecialchars($event['description']); ?></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Hashtags / Search Keywords (Comma-separated)</label>
+          <input type="text" id="tags" name="tags" class="form-control" placeholder="#coding, #hackathon" value="<?php echo htmlspecialchars($existing_tags_str); ?>">
         </div>
 
         <button type="submit" class="btn-submit">Save Event Changes</button>

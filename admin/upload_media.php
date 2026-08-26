@@ -2,6 +2,14 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Check role permission: super_admin, admin, or moderator
+$curr_role = $_SESSION['role'] ?? 'guest';
+$curr_user_id = $_SESSION['user_id'] ?? 1;
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin' && $curr_role !== 'moderator') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
 $success_msg = "";
 $error_msg = "";
 

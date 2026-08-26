@@ -357,6 +357,7 @@
       }
 
     }
+
     async function logIn() {
       const logInPass = document.getElementById('logInPass').value.trim();
       const logInEmail = document.getElementById('loginEmail').value.trim();

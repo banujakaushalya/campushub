@@ -2,37 +2,19 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Check role permission: super_admin or admin
+$curr_role = $_SESSION['role'] ?? 'guest';
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
 $students = [];
 $res = Database::search("SELECT u.*, (SELECT COUNT(*) FROM registrations r WHERE r.users_user_id = u.user_id) as reg_count FROM users u WHERE u.role = 'student' ORDER BY u.created_at DESC");
 if ($res && $res->num_rows > 0) {
     while ($row = $res->fetch_assoc()) {
         $students[] = $row;
     }
-} else {
-    $students = [
-        [
-            'user_id' => 2,
-            'first_name' => 'Kamal',
-            'last_name' => 'Perera',
-            'email' => 'kamal@student.edu',
-            'phone' => '0719876543',
-            'gender' => 'male',
-            'student_id' => 'JI-2024-042',
-            'institution' => 'Java Institute',
-            'reg_count' => 2
-        ],
-        [
-            'user_id' => 3,
-            'first_name' => 'Nimali',
-            'last_name' => 'Silva',
-            'email' => 'nimali@student.edu',
-            'phone' => '0761122334',
-            'gender' => 'female',
-            'student_id' => 'JI-2024-089',
-            'institution' => 'Java Institute',
-            'reg_count' => 1
-        ]
-    ];
 }
 ?>
 <main class="page-container">

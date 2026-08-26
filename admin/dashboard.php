@@ -2,37 +2,42 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Check role permission
+$curr_role = $_SESSION['role'] ?? 'guest';
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin' && $curr_role !== 'moderator') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
 // Fetch key metrics
 $student_count = 0;
 $s_res = Database::search("SELECT COUNT(*) as total FROM users WHERE role = 'student'");
 if ($s_res && $srow = $s_res->fetch_assoc()) {
     $student_count = (int)$srow['total'];
-} else {
-    $student_count = 14;
 }
 
 $event_count = 0;
 $e_res = Database::search("SELECT COUNT(*) as total FROM events");
 if ($e_res && $erow = $e_res->fetch_assoc()) {
     $event_count = (int)$erow['total'];
-} else {
-    $event_count = 4;
 }
 
 $reg_count = 0;
 $r_res = Database::search("SELECT COUNT(*) as total FROM registrations");
 if ($r_res && $rrow = $r_res->fetch_assoc()) {
     $reg_count = (int)$rrow['total'];
-} else {
-    $reg_count = 28;
 }
 
 $ann_count = 0;
 $a_res = Database::search("SELECT COUNT(*) as total FROM announcements");
 if ($a_res && $arow = $a_res->fetch_assoc()) {
     $ann_count = (int)$arow['total'];
-} else {
-    $ann_count = 3;
+}
+
+$role_app_count = 0;
+$ra_res = Database::search("SELECT COUNT(*) as total FROM role_applications WHERE status = 'pending'");
+if ($ra_res && $rarow = $ra_res->fetch_assoc()) {
+    $role_app_count = (int)$rarow['total'];
 }
 
 // Fetch recent registrations
@@ -50,29 +55,6 @@ if ($rr_res && $rr_res->num_rows > 0) {
     while ($row = $rr_res->fetch_assoc()) {
         $recent_regs[] = $row;
     }
-} else {
-    $recent_regs = [
-        [
-            'registration_id' => 1,
-            'first_name' => 'Kamal',
-            'last_name' => 'Perera',
-            'email' => 'kamal@student.edu',
-            'student_id' => 'JI-2024-042',
-            'event_title' => 'Full-Stack Web Dev Hackathon 2026',
-            'registered_at' => date('Y-m-d H:i:s'),
-            'status' => 'confirmed'
-        ],
-        [
-            'registration_id' => 2,
-            'first_name' => 'Nimali',
-            'last_name' => 'Silva',
-            'email' => 'nimali@student.edu',
-            'student_id' => 'JI-2024-089',
-            'event_title' => 'Annual Inter-University Sports Meet',
-            'registered_at' => date('Y-m-d H:i:s', strtotime('-1 day')),
-            'status' => 'confirmed'
-        ]
-    ];
 }
 ?>
 <main class="page-container">
@@ -317,56 +299,87 @@ if ($rr_res && $rr_res->num_rows > 0) {
       </div>
     </div>
 
-    <!-- Admin Shortcuts -->
+    <!-- Admin Shortcuts based on Role -->
     <div class="admin-actions">
-      <a href="manage_events.php" class="admin-btn">
-        <span>📅</span> Manage Events
-      </a>
-      <a href="add_event.php" class="admin-btn">
-        <span>➕</span> Add New Event
-      </a>
-      <a href="manage_students.php" class="admin-btn">
-        <span>🎓</span> Student Directory
-      </a>
-      <a href="manage_announcements.php" class="admin-btn">
-        <span>📢</span> Announcements
-      </a>
+      <?php if ($curr_role === 'super_admin' || $curr_role === 'admin' || $curr_role === 'moderator'): ?>
+        <a href="manage_events.php" class="admin-btn">
+          <span>📅</span> Manage Events
+        </a>
+        <a href="add_event.php" class="admin-btn">
+          <span>➕</span> Add New Event
+        </a>
+        <a href="upload_media.php" class="admin-btn">
+          <span>📸</span> Upload Media
+        </a>
+      <?php endif; ?>
+
+      <?php if ($curr_role === 'super_admin' || $curr_role === 'admin'): ?>
+        <a href="manage_students.php" class="admin-btn">
+          <span>🎓</span> Student Directory
+        </a>
+        <a href="manage_registrations.php" class="admin-btn">
+          <span>🎟️</span> Registrations
+        </a>
+        <a href="manage_announcements.php" class="admin-btn">
+          <span>📢</span> Announcements
+        </a>
+        <a href="manage_roles.php" class="admin-btn">
+          <span>👑</span> Roles & Approvals <?php if ($role_app_count > 0): ?><strong style="background:var(--coral);color:#fff;border-radius:10px;padding:2px 6px;font-size:0.75rem;margin-left:4px;"><?php echo $role_app_count; ?></strong><?php endif; ?>
+        </a>
+        <a href="organization_info.php" class="admin-btn">
+          <span>🏛️</span> Org Info
+        </a>
+      <?php endif; ?>
+
+      <?php if ($curr_role === 'super_admin'): ?>
+        <a href="../master_control/index.php" class="admin-btn" style="border-color: #f59e0b; background: #fffbeb;">
+          <span>⚙️</span> Master Control
+        </a>
+      <?php endif; ?>
     </div>
 
-    <!-- Recent Registrations Table -->
-    <div class="table-container">
-      <div class="table-header-bar">
-        <h2>Latest Student Event Registrations</h2>
-        <a href="manage_registrations.php" style="color: var(--coral); font-weight: bold; text-decoration: none; font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">View All &raquo;</a>
-      </div>
+    <!-- Recent Registrations Table (Admins only) -->
+    <?php if ($curr_role === 'super_admin' || $curr_role === 'admin'): ?>
+      <div class="table-container">
+        <div class="table-header-bar">
+          <h2>Latest Student Event Registrations</h2>
+          <a href="manage_registrations.php" style="color: var(--coral); font-weight: bold; text-decoration: none; font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">View All &raquo;</a>
+        </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th>ID</th>
-            <th>Event</th>
-            <th>Registration Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($recent_regs as $reg): ?>
+        <table>
+          <thead>
             <tr>
-              <td><strong><?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?></strong><br><small style="color: var(--muted);"><?php echo htmlspecialchars($reg['email']); ?></small></td>
-              <td><?php echo htmlspecialchars($reg['student_id'] ?? 'N/A'); ?></td>
-              <td><?php echo htmlspecialchars($reg['event_title']); ?></td>
-              <td><?php echo date('M d, Y · g:i A', strtotime($reg['registered_at'])); ?></td>
-              <td>
-                <span class="status-tag <?php echo ($reg['status'] === 'cancelled') ? 'tag-cancelled' : 'tag-confirmed'; ?>">
-                  <?php echo ucfirst(htmlspecialchars($reg['status'])); ?>
-                </span>
-              </td>
+              <th>Student</th>
+              <th>ID</th>
+              <th>Event</th>
+              <th>Registration Date</th>
+              <th>Status</th>
             </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            <?php if (empty($recent_regs)): ?>
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 28px; color: var(--muted);">No event registrations found in the database.</td>
+              </tr>
+            <?php else: ?>
+              <?php foreach ($recent_regs as $reg): ?>
+                <tr>
+                  <td><strong><?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?></strong><br><small style="color: var(--muted);"><?php echo htmlspecialchars($reg['email']); ?></small></td>
+                  <td><?php echo htmlspecialchars($reg['student_id'] ?? 'N/A'); ?></td>
+                  <td><?php echo htmlspecialchars($reg['event_title']); ?></td>
+                  <td><?php echo date('M d, Y · g:i A', strtotime($reg['registered_at'])); ?></td>
+                  <td>
+                    <span class="status-tag <?php echo ($reg['status'] === 'cancelled') ? 'tag-cancelled' : 'tag-confirmed'; ?>">
+                      <?php echo ucfirst(htmlspecialchars($reg['status'])); ?>
+                    </span>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
   </section>
 </main>
 <?php

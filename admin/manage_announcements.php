@@ -2,6 +2,13 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Check role permission: super_admin or admin
+$curr_role = $_SESSION['role'] ?? 'guest';
+if ($curr_role !== 'super_admin' && $curr_role !== 'admin') {
+    echo "<script>window.location.href = '../student/dashboard.php';</script>";
+    exit;
+}
+
 $success_msg = "";
 $error_msg = "";
 
@@ -18,14 +25,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $content = isset($_POST['content']) ? trim($_POST['content']) : '';
     $category = isset($_POST['category']) ? trim($_POST['category']) : 'General';
     $priority = isset($_POST['priority']) ? trim($_POST['priority']) : 'medium';
+    $tags = isset($_POST['tags']) ? trim($_POST['tags']) : '';
+
+    $meta_json = json_encode(['tags' => array_filter(array_map('trim', explode(',', $tags)))]);
 
     if (empty($title) || empty($content)) {
         $error_msg = "Title and Content cannot be empty.";
     } else {
         $inserted = Database::iud(
-            "INSERT INTO announcements (title, content, category, priority, admin_admin_id) VALUES (?, ?, ?, ?, 1)",
-            "ssss",
-            [$title, $content, $category, $priority]
+            "INSERT INTO announcements (title, content, category, priority, meta_data, admin_admin_id) VALUES (?, ?, ?, ?, ?, 1)",
+            "sssss",
+            [$title, $content, $category, $priority, $meta_json]
         );
 
         if ($inserted) {
@@ -234,6 +244,11 @@ if ($res && $res->num_rows > 0) {
         <div class="form-group">
           <label for="content">Announcement Body *</label>
           <textarea id="content" name="content" class="form-control" rows="4" placeholder="Detailed message for students..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Hashtags / Keywords (Comma-separated)</label>
+          <input type="text" id="tags" name="tags" class="form-control" placeholder="#exams, #timetable, #academic">
         </div>
 
         <button type="submit" class="btn-submit">Publish Notice</button>

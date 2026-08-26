@@ -17,12 +17,14 @@ if ($category !== 'all' && !empty($category)) {
 }
 
 if (!empty($search)) {
-    $sql .= " AND (title LIKE ? OR description LIKE ? OR location LIKE ?)";
+    $sql .= " AND (title LIKE ? OR description LIKE ? OR location LIKE ? OR club_name LIKE ? OR meta_data LIKE ?)";
     $like = "%" . $search . "%";
     $params[] = $like;
     $params[] = $like;
     $params[] = $like;
-    $types .= "sss";
+    $params[] = $like;
+    $params[] = $like;
+    $types .= "sssss";
 }
 
 $sql .= " ORDER BY event_date ASC";
@@ -42,62 +44,6 @@ if ($res && $res->num_rows > 0) {
         $row['seats_left'] = max(0, (int)$row['max_participants'] - $reg_count);
         $events[] = $row;
     }
-} else {
-    // Beginner fallback sample events if table is empty
-    $events = [
-        [
-            'event_id' => 1,
-            'title' => 'Full-Stack Web Dev Hackathon 2026',
-            'description' => 'Join our 24-hour coding sprint building modern web applications with PHP, JavaScript, and APIs.',
-            'category' => 'Competition',
-            'club_name' => 'Computing Society',
-            'event_date' => '2026-09-15',
-            'event_time' => '09:00:00',
-            'location' => 'Main Auditorium, Tech Campus',
-            'max_participants' => 80,
-            'registered_count' => 32,
-            'seats_left' => 48
-        ],
-        [
-            'event_id' => 2,
-            'title' => 'AI & Robotics Innovation Workshop',
-            'description' => 'Hands-on workshop exploring real-world AI applications and embedded hardware programming.',
-            'category' => 'Workshop',
-            'club_name' => 'Robotics Club',
-            'event_date' => '2026-09-22',
-            'event_time' => '14:00:00',
-            'location' => 'Lab 04, Innovation Wing',
-            'max_participants' => 40,
-            'registered_count' => 25,
-            'seats_left' => 15
-        ],
-        [
-            'event_id' => 3,
-            'title' => 'Annual Inter-University Sports Meet',
-            'description' => 'Athletics, badminton, table tennis, and chess championships across participating campuses.',
-            'category' => 'Sports',
-            'club_name' => 'Sports Council',
-            'event_date' => '2026-10-05',
-            'event_time' => '08:00:00',
-            'location' => 'University Sports Complex',
-            'max_participants' => 200,
-            'registered_count' => 110,
-            'seats_left' => 90
-        ],
-        [
-            'event_id' => 4,
-            'title' => 'Music & Arts Acoustic Night',
-            'description' => 'An evening of acoustic melodies, spoken word poetry, and creative student artwork exhibitions.',
-            'category' => 'Cultural',
-            'club_name' => 'Music & Arts Circle',
-            'event_date' => '2026-10-18',
-            'event_time' => '18:30:00',
-            'location' => 'Open Amphitheatre',
-            'max_participants' => 120,
-            'registered_count' => 45,
-            'seats_left' => 75
-        ]
-    ];
 }
 ?>
 <main class="page-container">
