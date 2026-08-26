@@ -256,6 +256,12 @@ if ($rr_res && $rr_res->num_rows > 0) {
         grid-template-columns: 1fr 1fr;
       }
     }
+
+    @media (max-width: 520px) {
+      .metrics-grid, .admin-actions {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 
   <section class="admin-hero">

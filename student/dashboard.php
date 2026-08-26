@@ -151,7 +151,7 @@ if ($user_id > 0) {
 
     .actions-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 18px;
       margin-bottom: 36px;
     }
@@ -238,7 +238,16 @@ if ($user_id > 0) {
         grid-template-columns: 1fr;
       }
       .actions-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+      .stat-card {
+        padding: 16px;
       }
     }
   </style>

@@ -1,8 +1,62 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Cabin+Sketch:wght@400;700&display=swap');
 
-body {
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
     background-color: #faf8ff;
     font-family: 'Archivo Black', sans-serif;
+    -webkit-text-size-adjust: 100%;
 }
+
+img, svg, video {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+input, select, textarea, button {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Global Responsive Helpers */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .page-container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        padding-bottom: 40px !important;
+    }
+
+    .hero,
+    .dash-hero,
+    .events-hero,
+    .reg-hero,
+    .announcement-hero,
+    .apply-hero {
+        margin-top: 16px !important;
+        padding: 24px 18px !important;
+        min-height: auto !important;
+        border-radius: 12px !important;
+    }
+
+    .content-section {
+        margin-top: 24px !important;
+    }
+}
+
 
 

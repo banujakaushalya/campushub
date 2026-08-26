@@ -618,6 +618,26 @@ $has_active_filters = (!empty($search) || $event_filter > 0 || $type_filter !== 
         position: static;
       }
     }
+
+    @media (max-width: 600px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .gallery-top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .lightbox-modal {
+        padding: 12px;
+      }
+
+      .lightbox-details {
+        padding: 16px;
+      }
+    }
   </style>
 
   <section class="gallery-hero">

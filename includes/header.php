@@ -304,10 +304,58 @@ if (isset($_SESSION['user_id'])) {
           order: 3;
           width: 100%;
           justify-content: center;
-          gap: 8px 12px;
+          gap: 6px 10px;
           margin: 4px 0 0;
           padding-top: 8px;
           border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .main-header {
+          padding: 6px 8px 0;
+        }
+
+        .nav-bar {
+          padding: 8px 12px;
+          border-radius: 12px;
+        }
+
+        .nav-logo {
+          font-size: 1.5rem;
+        }
+
+        .nav-links {
+          gap: 4px 8px;
+        }
+
+        .nav-links a {
+          font-size: 0.82rem;
+          padding: 5px 8px;
+        }
+
+        .user-name {
+          max-width: 80px;
+          font-size: 0.8rem;
+        }
+
+        .user-role-badge {
+          font-size: 0.65rem;
+        }
+
+        .btn-nav-login,
+        .btn-nav-signup {
+          padding: 6px 12px;
+          font-size: 0.82rem;
+        }
+
+        .account-dropdown {
+          position: fixed;
+          top: 65px;
+          right: 12px;
+          left: 12px;
+          min-width: auto;
+          max-width: calc(100vw - 24px);
         }
       }
     </style>
@@ -338,13 +386,11 @@ if (isset($_SESSION['user_id'])) {
           <a href="<?php echo $path; ?>announcements.php">Notices</a>
 
         <?php elseif ($is_logged_in == true && ($user_role == "student" || $user_role == "teacher")): ?>
-          <!-- Student / Teacher Internal Navigation -->
+          <!-- Student / Teacher Clean Navigation -->
+          <a href="<?php echo $path; ?>student/dashboard.php">Dashboard</a>
           <a href="<?php echo $path; ?>student/events.php">Events</a>
-          <a href="<?php echo $path; ?>student/my_registrations.php">My Registrations</a>
           <a href="<?php echo $path; ?>gallery.php">Gallery</a>
           <a href="<?php echo $path; ?>announcements.php">Announcements</a>
-          <a href="<?php echo $path; ?>student/upload_photo.php">Upload Photos</a>
-          <a href="<?php echo $path; ?>student/apply_role.php">Apply for Role</a>
           <a href="<?php echo $path; ?>contact.php">Contact</a>
 
         <?php else: ?>
@@ -392,11 +438,11 @@ if (isset($_SESSION['user_id'])) {
                   <a href="<?php echo $path; ?>admin/add_event.php">Add New Event</a>
                   <a href="<?php echo $path; ?>admin/upload_media.php">Upload Media</a>
                 <?php else: ?>
-                  <a href="<?php echo $path; ?>student/dashboard.php">My Dashboard</a>
-                  <a href="<?php echo $path; ?>student/profile.php">My Profile</a>
-                  <a href="<?php echo $path; ?>student/my_registrations.php">My Registrations</a>
-                  <a href="<?php echo $path; ?>student/upload_photo.php">Upload Photos</a>
-                  <a href="<?php echo $path; ?>student/apply_role.php">Apply for Mod/Admin</a>
+                  <a href="<?php echo $path; ?>student/dashboard.php">📊 My Dashboard</a>
+                  <a href="<?php echo $path; ?>student/my_registrations.php">🎟️ My Registrations</a>
+                  <a href="<?php echo $path; ?>student/upload_photo.php">📸 Upload Photos</a>
+                  <a href="<?php echo $path; ?>student/apply_role.php">🌟 Apply for Role</a>
+                  <a href="<?php echo $path; ?>student/profile.php">👤 My Profile</a>
                 <?php endif; ?>
                 <a href="<?php echo $path; ?>logout.php" class="logout-link">Logout</a>
               </div>
