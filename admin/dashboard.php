@@ -35,20 +35,16 @@ if ($a_res && $arow = $a_res->fetch_assoc()) {
 }
 
 $role_app_count = 0;
-$ra_res = Database::search("SELECT COUNT(*) as total FROM role_applications WHERE status = 'pending'");
-if ($ra_res && $rarow = $ra_res->fetch_assoc()) {
-    $role_app_count = (int)$rarow['total'];
-}
 
 // Fetch recent registrations
 $recent_regs = [];
-$reg_sql = "SELECT r.registration_id, r.status, r.registered_at, 
-                   u.first_name, u.last_name, u.email, u.student_id,
+$reg_sql = "SELECT r.registration_id, r.reg_date, 
+                   u.first_name, u.last_name, u.email,
                    e.title as event_title, e.event_date
             FROM registrations r
             JOIN users u ON r.users_user_id = u.user_id
             JOIN events e ON r.events_event_id = e.event_id
-            ORDER BY r.registered_at DESC LIMIT 5";
+            ORDER BY r.reg_date DESC LIMIT 5";
 
 $rr_res = Database::search($reg_sql);
 if ($rr_res && $rr_res->num_rows > 0) {
@@ -371,12 +367,12 @@ if ($rr_res && $rr_res->num_rows > 0) {
               <?php foreach ($recent_regs as $reg): ?>
                 <tr>
                   <td><strong><?php echo htmlspecialchars($reg['first_name'] . ' ' . $reg['last_name']); ?></strong><br><small style="color: var(--muted);"><?php echo htmlspecialchars($reg['email']); ?></small></td>
-                  <td><?php echo htmlspecialchars($reg['student_id'] ?? 'N/A'); ?></td>
+                  <td>REG-<?php echo str_pad($reg['registration_id'], 4, '0', STR_PAD_LEFT); ?></td>
                   <td><?php echo htmlspecialchars($reg['event_title']); ?></td>
-                  <td><?php echo date('M d, Y · g:i A', strtotime($reg['registered_at'])); ?></td>
+                  <td><?php echo date('M d, Y · g:i A', strtotime($reg['reg_date'])); ?></td>
                   <td>
-                    <span class="status-tag <?php echo ($reg['status'] === 'cancelled') ? 'tag-cancelled' : 'tag-confirmed'; ?>">
-                      <?php echo ucfirst(htmlspecialchars($reg['status'])); ?>
+                    <span class="status-tag tag-confirmed">
+                      Confirmed
                     </span>
                   </td>
                 </tr>

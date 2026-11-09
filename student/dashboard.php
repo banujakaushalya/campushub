@@ -16,7 +16,7 @@ if ($user_id > 0) {
 // Count active registrations
 $reg_count = 0;
 if ($user_id > 0) {
-    $c_res = Database::search("SELECT COUNT(*) as total FROM registrations WHERE users_user_id = ? AND status = 'confirmed'", "i", [$user_id]);
+    $c_res = Database::search("SELECT COUNT(*) as total FROM registrations WHERE users_user_id = ?", "i", [$user_id]);
     if ($c_res && $crow = $c_res->fetch_assoc()) {
         $reg_count = (int)$crow['total'];
     }
@@ -24,7 +24,7 @@ if ($user_id > 0) {
 
 // Count upcoming campus events
 $upcoming_count = 0;
-$e_res = Database::search("SELECT COUNT(*) as total FROM events WHERE status = 'upcoming'");
+$e_res = Database::search("SELECT COUNT(*) as total FROM events WHERE status = 'display'");
 if ($e_res && $erow = $e_res->fetch_assoc()) {
     $upcoming_count = (int)$erow['total'];
 }
@@ -39,13 +39,17 @@ if ($a_res && $arow = $a_res->fetch_assoc()) {
 // Fetch 2 next registered events
 $my_events = [];
 if ($user_id > 0) {
-    $m_res = Database::search("SELECT e.title, e.event_date, e.event_time, e.location, e.category 
+    $m_res = Database::search("SELECT e.title, e.event_date, e.event_start_time, e.meta_data 
                               FROM registrations r 
                               JOIN events e ON r.events_event_id = e.event_id 
-                              WHERE r.users_user_id = ? AND r.status = 'confirmed' 
+                              WHERE r.users_user_id = ? 
                               ORDER BY e.event_date ASC LIMIT 2", "i", [$user_id]);
     if ($m_res && $m_res->num_rows > 0) {
         while ($mrow = $m_res->fetch_assoc()) {
+            $meta = !empty($mrow['meta_data']) ? json_decode($mrow['meta_data'], true) : [];
+            $mrow['location'] = $meta['location'] ?? 'Campus Grounds';
+            $mrow['category'] = $meta['category'] ?? 'Event';
+            $mrow['event_time'] = !empty($mrow['event_start_time']) ? $mrow['event_start_time'] : '09:00:00';
             $my_events[] = $mrow;
         }
     }
@@ -254,7 +258,7 @@ if ($user_id > 0) {
 
   <section class="dash-hero">
     <h1>Welcome, <?php echo htmlspecialchars($user_info['first_name'] ?? 'Student'); ?>!</h1>
-    <p>Student Portal · ID: <?php echo htmlspecialchars($user_info['student_id'] ?? 'JI-2024-042'); ?> · <?php echo htmlspecialchars($user_info['institution'] ?? 'Java Institute'); ?></p>
+    <p>Student Portal &bull; ID: STU-<?php echo str_pad($user_id, 4, '0', STR_PAD_LEFT); ?> &bull; CampusHub Student</p>
   </section>
 
   <section class="content-section">
@@ -288,7 +292,7 @@ if ($user_id > 0) {
     <!-- Portal Shortcuts -->
     <h2 class="section-title">Quick Actions</h2>
     <div class="actions-grid">
-      <a href="events.php" class="action-btn-card">
+      <a href="../events.php" class="action-btn-card">
         <div class="action-emoji">🔍</div>
         <div class="action-label">Browse Events</div>
         <div class="action-desc">Explore workshops & hackathons</div>
@@ -324,7 +328,7 @@ if ($user_id > 0) {
     <div class="registered-preview">
       <?php if (empty($my_events)): ?>
         <p style="color: var(--muted); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0;">
-          You do not have any registered events yet. <a href="events.php" style="color: var(--coral); font-weight: bold; text-decoration: none;">Browse Events &raquo;</a>
+          You do not have any registered events yet. <a href="../events.php" style="color: var(--coral); font-weight: bold; text-decoration: none;">Browse Events &raquo;</a>
         </p>
       <?php else: ?>
         <?php foreach ($my_events as $me): ?>

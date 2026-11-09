@@ -25,26 +25,36 @@ if ($e_res && $e_res->num_rows > 0) {
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $title = isset($_POST['title']) ? trim($_POST['title']) : '';
     $description = isset($_POST['description']) ? trim($_POST['description']) : '';
-    $media_type = isset($_POST['media_type']) ? trim($_POST['media_type']) : 'photo';
+    $raw_type = isset($_POST['media_type']) ? trim($_POST['media_type']) : 'image';
+    $media_type = ($raw_type === 'video') ? 'video' : 'image';
     $event_id = isset($_POST['event_id']) ? (int)$_POST['event_id'] : 0;
     
-    $file_url = "hero1.jpg";
+    // Ensure valid event_id for foreign key constraint
+    if ($event_id <= 0 && !empty($events)) {
+        $event_id = (int)$events[0]['event_id'];
+    }
+    
+    $file_path = "hero1.jpg";
     if (isset($_FILES['media_file']) && $_FILES['media_file']['error'] === UPLOAD_ERR_OK) {
         $file_name = time() . '_' . basename($_FILES['media_file']['name']);
         $target_dir = __DIR__ . "/../assets/images/";
         $target_file = $target_dir . $file_name;
         if (move_uploaded_file($_FILES['media_file']['tmp_name'], $target_file)) {
-            $file_url = $file_name;
+            $file_path = $file_name;
         }
     }
 
+    $meta_json = json_encode(['description' => $description]);
+
     if (empty($title)) {
         $error_msg = "Media title is required.";
+    } elseif ($event_id <= 0) {
+        $error_msg = "An active event is required to link media. Please create an event first.";
     } else {
         $inserted = Database::iud(
-            "INSERT INTO media (title, description, media_type, file_url, users_user_id, events_event_id) VALUES (?, ?, ?, ?, 1, ?)",
-            "ssssi",
-            [$title, $description, $media_type, $file_url, $event_id]
+            "INSERT INTO media (title, media_type, meta_data, events_event_id, users_user_id, file_path) VALUES (?, ?, ?, ?, ?, ?)",
+            "sssiis",
+            [$title, $media_type, $meta_json, $event_id, $curr_user_id, $file_path]
         );
 
         if ($inserted) {

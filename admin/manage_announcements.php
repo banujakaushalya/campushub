@@ -15,7 +15,7 @@ $error_msg = "";
 // Handle announcement deletion
 if (isset($_GET['delete_id'])) {
     $del_id = (int)$_GET['delete_id'];
-    Database::iud("DELETE FROM announcements WHERE announcement_id = ?", "i", [$del_id]);
+    Database::iud("DELETE FROM announcements WHERE id = ?", "i", [$del_id]);
     $success_msg = "Announcement deleted successfully.";
 }
 
@@ -32,10 +32,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (empty($title) || empty($content)) {
         $error_msg = "Title and Content cannot be empty.";
     } else {
+        $admin_id = 1;
+        if (isset($_SESSION['user_id'])) {
+            $uid = (int)$_SESSION['user_id'];
+            $a_res = Database::search("SELECT admin_id FROM admin WHERE users_user_id = ? LIMIT 1", "i", [$uid]);
+            if ($a_res && $arow = $a_res->fetch_assoc()) {
+                $admin_id = (int)$arow['admin_id'];
+            }
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $expire = date('Y-m-d H:i:s', strtotime('+30 days'));
+
         $inserted = Database::iud(
-            "INSERT INTO announcements (title, content, category, priority, meta_data, admin_admin_id) VALUES (?, ?, ?, ?, ?, 1)",
-            "sssss",
-            [$title, $content, $category, $priority, $meta_json]
+            "INSERT INTO announcements (title, category, priority, content, date_posted, date_expire, admin_admin_id, meta_data, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'display')",
+            "ssssssis",
+            [$title, $category, $priority, $content, $now, $expire, $admin_id, $meta_json]
         );
 
         if ($inserted) {
@@ -48,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 // Fetch all announcements
 $announcements = [];
-$res = Database::search("SELECT * FROM announcements ORDER BY created_at DESC");
+$res = Database::search("SELECT * FROM announcements ORDER BY date_posted DESC");
 if ($res && $res->num_rows > 0) {
     while ($row = $res->fetch_assoc()) {
         $announcements[] = $row;
@@ -279,9 +291,9 @@ if ($res && $res->num_rows > 0) {
                 <td><strong><?php echo htmlspecialchars($a['title']); ?></strong></td>
                 <td><?php echo htmlspecialchars($a['category']); ?></td>
                 <td><span style="text-transform: uppercase; font-size: 0.75rem; font-weight: bold;"><?php echo htmlspecialchars($a['priority']); ?></span></td>
-                <td><?php echo date('M d', strtotime($a['created_at'])); ?></td>
+                <td><?php echo date('M d', strtotime($a['date_posted'])); ?></td>
                 <td>
-                  <a href="manage_announcements.php?delete_id=<?php echo htmlspecialchars($a['announcement_id']); ?>" class="btn-delete" onclick="return confirm('Delete this announcement?');">Delete</a>
+                  <a href="manage_announcements.php?delete_id=<?php echo htmlspecialchars($a['id']); ?>" class="btn-delete" onclick="return confirm('Delete this announcement?');">Delete</a>
                 </td>
               </tr>
             <?php endforeach; ?>

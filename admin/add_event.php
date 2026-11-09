@@ -18,20 +18,43 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $category = isset($_POST['category']) ? trim($_POST['category']) : 'Workshop';
     $club_name = isset($_POST['club_name']) ? trim($_POST['club_name']) : 'CampusHub General';
     $event_date = isset($_POST['event_date']) ? trim($_POST['event_date']) : '';
-    $event_time = isset($_POST['event_time']) ? trim($_POST['event_time']) : '09:00:00';
+    $event_start_time = isset($_POST['event_start_time']) && !empty($_POST['event_start_time']) ? trim($_POST['event_start_time']) : (isset($_POST['event_time']) ? trim($_POST['event_time']) : '09:00:00');
+    $event_end_time = isset($_POST['event_end_time']) && !empty($_POST['event_end_time']) ? trim($_POST['event_end_time']) : '17:00:00';
     $location = isset($_POST['location']) ? trim($_POST['location']) : '';
-    $max_participants = isset($_POST['max_participants']) ? (int)$_POST['max_participants'] : 50;
+    $seats = isset($_POST['seats']) ? (int)$_POST['seats'] : (isset($_POST['max_participants']) ? (int)$_POST['max_participants'] : 100);
+    $status = isset($_POST['status']) && in_array($_POST['status'], ['display', 'hide']) ? $_POST['status'] : 'display';
+    $img_path = isset($_POST['img_path']) && !empty(trim($_POST['img_path'])) ? trim($_POST['img_path']) : 'assets/images/events/tech_coding_work_shop.jpg';
     $tags = isset($_POST['tags']) ? trim($_POST['tags']) : '';
 
-    $meta_json = json_encode(['tags' => array_filter(array_map('trim', explode(',', $tags)))]);
+    // Handle image upload if provided
+    if (isset($_FILES['event_image']) && $_FILES['event_image']['error'] === UPLOAD_ERR_OK) {
+        $img_name = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['event_image']['name']));
+        $target_dir = __DIR__ . '/../assets/images/events/';
+        if (!is_dir($target_dir)) {
+            @mkdir($target_dir, 0777, true);
+        }
+        $target_file = $target_dir . $img_name;
+        if (move_uploaded_file($_FILES['event_image']['tmp_name'], $target_file)) {
+            $img_path = 'assets/images/events/' . $img_name;
+        }
+    }
+
+    $tags_arr = array_values(array_filter(array_map('trim', explode(',', $tags))));
+    $meta_data = [
+        'category' => $category,
+        'location' => $location,
+        'club_name' => $club_name,
+        'tags' => $tags_arr
+    ];
+    $meta_json = json_encode($meta_data);
 
     if (empty($title) || empty($description) || empty($event_date) || empty($location)) {
         $error_msg = "Please fill in all mandatory fields (Title, Description, Date, Location).";
     } else {
         $inserted = Database::iud(
-            "INSERT INTO events (title, description, category, club_name, event_date, event_time, location, max_participants, meta_data, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'upcoming')",
-            "sssssssss",
-            [$title, $description, $category, $club_name, $event_date, $event_time, $location, $max_participants, $meta_json]
+            "INSERT INTO events (title, description, event_date, event_start_time, event_end_time, img_path, meta_data, status, seats) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "ssssssssi",
+            [$title, $description, $event_date, $event_start_time, $event_end_time, $img_path, $meta_json, $status, $seats]
         );
 
         if ($inserted) {
@@ -181,7 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
       <?php endif; ?>
 
-      <form action="add_event.php" method="POST">
+      <form action="add_event.php" method="POST" enctype="multipart/form-data">
         <div class="form-group">
           <label for="title">Event Title *</label>
           <input type="text" id="title" name="title" class="form-control" placeholder="e.g. AI & Robotics Innovation Workshop" required>
@@ -212,21 +235,46 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           </div>
 
           <div class="form-group">
-            <label for="event_time">Event Time *</label>
-            <input type="time" id="event_time" name="event_time" class="form-control" value="09:00" required>
+            <label for="event_start_time">Event Start Time *</label>
+            <input type="time" id="event_start_time" name="event_start_time" class="form-control" value="09:00" required>
           </div>
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
-            <label for="location">Location / Venue *</label>
-            <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Main Auditorium" required>
+            <label for="event_end_time">Event End Time *</label>
+            <input type="time" id="event_end_time" name="event_end_time" class="form-control" value="17:00" required>
           </div>
 
           <div class="form-group">
-            <label for="max_participants">Max Participant Seats</label>
-            <input type="number" id="max_participants" name="max_participants" class="form-control" value="50" min="1">
+            <label for="location">Location / Venue *</label>
+            <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Main Auditorium" required>
           </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="seats">Max Participant Seats</label>
+            <input type="number" id="seats" name="seats" class="form-control" value="100" min="1">
+          </div>
+
+          <div class="form-group">
+            <label for="status">Event Status</label>
+            <select id="status" name="status" class="form-control">
+              <option value="display" selected>Display</option>
+              <option value="hide">Hide</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="img_path">Banner Image Path / URL (Optional)</label>
+          <input type="text" id="img_path" name="img_path" class="form-control" placeholder="assets/images/events/tech_coding_work_shop.jpg" value="assets/images/events/tech_coding_work_shop.jpg">
+        </div>
+
+        <div class="form-group">
+          <label for="event_image">Or Upload Banner Image File</label>
+          <input type="file" id="event_image" name="event_image" class="form-control" accept="image/*">
         </div>
 
         <div class="form-group">

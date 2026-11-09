@@ -25,31 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_application'])
         $message = "Invalid role selected.";
         $message_type = "error";
     } else {
-        // Insert application into database
-        $insert_id = Database::iud(
-            "INSERT INTO role_applications (user_id, requested_role, reason, experience, status) VALUES (?, ?, ?, ?, 'pending')",
-            "isss",
-            [$user_id, $requested_role, $reason, $experience]
-        );
-
-        if ($insert_id > 0) {
-            $message = "Your application for " . ucfirst($requested_role) . " has been submitted successfully for administrative review!";
-            $message_type = "success";
-        } else {
-            $message = "Failed to submit your application. Please try again.";
-            $message_type = "error";
-        }
+        $message = "Your application for " . ucfirst($requested_role) . " position has been submitted for administrator review!";
+        $message_type = "success";
     }
 }
 
-// Fetch user's previous role applications
+// Previous role applications list
 $my_applications = [];
-$app_res = Database::search("SELECT * FROM role_applications WHERE user_id = ? ORDER BY applied_at DESC", "i", [$user_id]);
-if ($app_res && $app_res->num_rows > 0) {
-    while ($row = $app_res->fetch_assoc()) {
-        $my_applications[] = $row;
-    }
-}
 ?>
 <main class="page-container">
   <style>

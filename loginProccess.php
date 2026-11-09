@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (empty($errors)) {
         $result = Database::search(
-            "SELECT user_id, first_name, last_name, email, password_hash, `role` FROM users WHERE email = ? LIMIT 1",
+            "SELECT users.user_id, users.first_name, users.last_name, users.email, users.password_hash, COALESCE(admin.`role`, users.`role`) AS `role` FROM users LEFT JOIN admin ON users.user_id = admin.users_user_id WHERE users.email = ? LIMIT 1;",
             "s",
             [$email]
         );
@@ -49,6 +49,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['role'] = $user['role'];
+
+
 
         echo json_encode(["success" => true, "message" => "Welcome back, {$user['first_name']}."]);
         exit;

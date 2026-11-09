@@ -2,13 +2,13 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
-$user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 2; // Kamal Perera fallback sample id
+$user_id = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 0;
 $message = "";
 
 // Handle registration cancellation
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['cancel_reg_id'])) {
     $reg_id_to_cancel = (int)$_POST['cancel_reg_id'];
-    $cancel_res = Database::iud("UPDATE registrations SET status = 'cancelled' WHERE registration_id = ? AND users_user_id = ?", "ii", [$reg_id_to_cancel, $user_id]);
+    $cancel_res = Database::iud("DELETE FROM registrations WHERE registration_id = ? AND users_user_id = ?", "ii", [$reg_id_to_cancel, $user_id]);
     if ($cancel_res) {
         $message = "Registration successfully cancelled.";
     }
@@ -16,8 +16,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['cancel_reg_id'])) {
 
 // Fetch user registrations with joined event details
 $registrations = [];
-$sql = "SELECT r.registration_id, r.status, r.notes, r.registered_at, 
-               e.event_id, e.title, e.description, e.category, e.club_name, e.event_date, e.event_time, e.location
+$sql = "SELECT r.registration_id, r.reg_date, 
+               e.event_id, e.title, e.description, e.event_date, e.event_start_time, e.event_end_time, e.img_path, e.meta_data, e.status as event_status, e.seats
         FROM registrations r
         JOIN events e ON r.events_event_id = e.event_id
         WHERE r.users_user_id = ?
@@ -27,6 +27,13 @@ $res = Database::search($sql, "i", [$user_id]);
 
 if ($res && $res->num_rows > 0) {
     while ($row = $res->fetch_assoc()) {
+        $meta = !empty($row['meta_data']) ? json_decode($row['meta_data'], true) : [];
+        $row['category'] = $meta['category'] ?? ($row['category'] ?? 'Event');
+        $row['club_name'] = $meta['club_name'] ?? ($row['club_name'] ?? 'CampusHub');
+        $row['location'] = $meta['location'] ?? ($row['location'] ?? 'Campus Grounds');
+        $row['tags'] = $meta['tags'] ?? [];
+        $row['event_time'] = !empty($row['event_start_time']) ? $row['event_start_time'] : '09:00:00';
+        $row['status'] = 'confirmed';
         $registrations[] = $row;
     }
 }
@@ -221,7 +228,7 @@ if ($res && $res->num_rows > 0) {
           <p style="color: var(--muted); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin-bottom: 20px;">
             You have not registered for any upcoming events yet.
           </p>
-          <a href="events.php" style="display: inline-block; background: var(--coral); color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none;">Browse Events Calendar</a>
+          <a href="../events.php" style="display: inline-block; background: var(--coral); color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none;">Browse Events Calendar</a>
         </div>
       <?php else: ?>
         <?php foreach ($registrations as $reg): ?>

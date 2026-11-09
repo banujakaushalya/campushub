@@ -10,7 +10,7 @@ if ($curr_role !== 'super_admin' && $curr_role !== 'admin') {
 }
 
 $students = [];
-$res = Database::search("SELECT u.*, (SELECT COUNT(*) FROM registrations r WHERE r.users_user_id = u.user_id) as reg_count FROM users u WHERE u.role = 'student' ORDER BY u.created_at DESC");
+$res = Database::search("SELECT u.*, (SELECT COUNT(*) FROM registrations r WHERE r.users_user_id = u.user_id) as reg_count FROM users u WHERE u.role = 'student' ORDER BY u.user_id DESC");
 if ($res && $res->num_rows > 0) {
     while ($row = $res->fetch_assoc()) {
         $students[] = $row;
@@ -110,12 +110,12 @@ if ($res && $res->num_rows > 0) {
       <tbody>
         <?php foreach ($students as $stu): ?>
           <tr>
-            <td><strong><?php echo htmlspecialchars($stu['student_id'] ?? 'JI-STU'); ?></strong></td>
+            <td><strong>STU-<?php echo str_pad($stu['user_id'], 4, '0', STR_PAD_LEFT); ?></strong></td>
             <td><?php echo htmlspecialchars($stu['first_name'] . ' ' . $stu['last_name']); ?></td>
             <td><?php echo htmlspecialchars($stu['email']); ?></td>
             <td><?php echo htmlspecialchars($stu['phone']); ?></td>
-            <td><?php echo ucfirst(htmlspecialchars($stu['gender'] ?? 'other')); ?></td>
-            <td><?php echo htmlspecialchars($stu['institution'] ?? 'Java Institute'); ?></td>
+            <td><?php echo ucfirst(htmlspecialchars($stu['gender'] ?? 'male')); ?></td>
+            <td>CampusHub Campus</td>
             <td><span class="badge-count"><?php echo htmlspecialchars($stu['reg_count'] ?? 0); ?> Events</span></td>
           </tr>
         <?php endforeach; ?>

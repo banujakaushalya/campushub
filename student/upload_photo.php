@@ -21,28 +21,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $description = isset($_POST['description']) ? trim($_POST['description']) : '';
     $event_id = isset($_POST['event_id']) ? (int)$_POST['event_id'] : 0;
     
-    $file_url = "tech_coding_work_shop.jpg"; // Default standard image
+    if ($event_id <= 0 && !empty($events)) {
+        $event_id = (int)$events[0]['event_id'];
+    }
+    
+    $file_path = "tech_coding_work_shop.jpg";
     
     // Check if file was uploaded
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $file_name = time() . '_' . basename($_FILES['photo']['name']);
         $target_dir = __DIR__ . "/../assets/images/events/";
         if (!is_dir($target_dir)) {
-            mkdir($target_dir, 0777, true);
+            @mkdir($target_dir, 0777, true);
         }
         $target_file = $target_dir . $file_name;
         if (move_uploaded_file($_FILES['photo']['tmp_name'], $target_file)) {
-            $file_url = $file_name;
+            $file_path = $file_name;
         }
     }
 
+    $meta_json = json_encode(['description' => $description]);
+
     if (empty($title)) {
         $error_msg = "Please provide a photo title.";
+    } elseif ($event_id <= 0) {
+        $error_msg = "An active event is required to upload a photo. Please select an event.";
     } else {
         $inserted = Database::iud(
-            "INSERT INTO media (title, description, media_type, file_url, users_user_id, events_event_id) VALUES (?, ?, 'photo', ?, ?, ?)",
-            "sssii",
-            [$title, $description, $file_url, $user_id, $event_id]
+            "INSERT INTO media (title, media_type, meta_data, events_event_id, users_user_id, file_path) VALUES (?, 'image', ?, ?, ?, ?)",
+            "ssiis",
+            [$title, $meta_json, $event_id, $user_id, $file_path]
         );
 
         if ($inserted) {

@@ -34,11 +34,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $errors[] = "Password must be at least 8 characters long.";
   } else if ($password !== $confirmPassword) {
     $errors[] = "Passwords do not match.";
-    echo "pass = $password", "conpass = $confirmPassword";
   } else if (empty($gender)) {
     $errors[] = "Gender is required.";
   } else if (empty($role)) {
-    $errors[] = "Role is required.";
+    $role = 'student';
+  }
+
+  if ($role !== 'teacher') {
+    $role = 'student';
   }
   if (empty($errors)) {
 

@@ -13,38 +13,7 @@ $event_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $success_msg = "";
 $error_msg = "";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $title = isset($_POST['title']) ? trim($_POST['title']) : '';
-    $description = isset($_POST['description']) ? trim($_POST['description']) : '';
-    $category = isset($_POST['category']) ? trim($_POST['category']) : 'Workshop';
-    $club_name = isset($_POST['club_name']) ? trim($_POST['club_name']) : 'CampusHub General';
-    $event_date = isset($_POST['event_date']) ? trim($_POST['event_date']) : '';
-    $event_time = isset($_POST['event_time']) ? trim($_POST['event_time']) : '09:00:00';
-    $location = isset($_POST['location']) ? trim($_POST['location']) : '';
-    $max_participants = isset($_POST['max_participants']) ? (int)$_POST['max_participants'] : 50;
-    $status = isset($_POST['status']) ? trim($_POST['status']) : 'upcoming';
-    $tags = isset($_POST['tags']) ? trim($_POST['tags']) : '';
-
-    $meta_json = json_encode(['tags' => array_filter(array_map('trim', explode(',', $tags)))]);
-
-    if (empty($title) || empty($description) || empty($event_date) || empty($location)) {
-        $error_msg = "Please fill in all mandatory fields.";
-    } else {
-        $updated = Database::iud(
-            "UPDATE events SET title = ?, description = ?, category = ?, club_name = ?, event_date = ?, event_time = ?, location = ?, max_participants = ?, meta_data = ?, status = ? WHERE event_id = ?",
-            "ssssssssssi",
-            [$title, $description, $category, $club_name, $event_date, $event_time, $location, $max_participants, $meta_json, $status, $event_id]
-        );
-
-        if ($updated) {
-            $success_msg = "Event updated successfully!";
-        } else {
-            $error_msg = "Failed to update event.";
-        }
-    }
-}
-
-// Fetch event
+// Fetch existing event
 $event = null;
 if ($event_id > 0) {
     $res = Database::search("SELECT * FROM events WHERE event_id = ? LIMIT 1", "i", [$event_id]);
@@ -53,14 +22,81 @@ if ($event_id > 0) {
     }
 }
 
-// Extract existing tags from meta_data
-$existing_tags_str = "";
-if ($event && !empty($event['meta_data'])) {
-    $meta_arr = json_decode($event['meta_data'], true);
-    if (isset($meta_arr['tags']) && is_array($meta_arr['tags'])) {
-        $existing_tags_str = implode(', ', $meta_arr['tags']);
+if (!$event) {
+    echo "<script>window.location.href = 'manage_events.php';</script>";
+    exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $title = isset($_POST['title']) ? trim($_POST['title']) : '';
+    $description = isset($_POST['description']) ? trim($_POST['description']) : '';
+    $category = isset($_POST['category']) ? trim($_POST['category']) : 'Workshop';
+    $club_name = isset($_POST['club_name']) ? trim($_POST['club_name']) : 'CampusHub General';
+    $event_date = isset($_POST['event_date']) ? trim($_POST['event_date']) : '';
+    $event_start_time = isset($_POST['event_start_time']) && !empty($_POST['event_start_time']) ? trim($_POST['event_start_time']) : (isset($_POST['event_time']) ? trim($_POST['event_time']) : '09:00:00');
+    $event_end_time = isset($_POST['event_end_time']) && !empty($_POST['event_end_time']) ? trim($_POST['event_end_time']) : '17:00:00';
+    $location = isset($_POST['location']) ? trim($_POST['location']) : '';
+    $seats = isset($_POST['seats']) ? (int)$_POST['seats'] : (isset($_POST['max_participants']) ? (int)$_POST['max_participants'] : 100);
+    $status = isset($_POST['status']) && in_array($_POST['status'], ['display', 'hide']) ? $_POST['status'] : 'display';
+    $img_path = isset($_POST['img_path']) && !empty(trim($_POST['img_path'])) ? trim($_POST['img_path']) : ($event['img_path'] ?? 'assets/images/events/tech_coding_work_shop.jpg');
+    $tags = isset($_POST['tags']) ? trim($_POST['tags']) : '';
+
+    // Handle image upload if provided
+    if (isset($_FILES['event_image']) && $_FILES['event_image']['error'] === UPLOAD_ERR_OK) {
+        $img_name = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', basename($_FILES['event_image']['name']));
+        $target_dir = __DIR__ . '/../assets/images/events/';
+        if (!is_dir($target_dir)) {
+            @mkdir($target_dir, 0777, true);
+        }
+        $target_file = $target_dir . $img_name;
+        if (move_uploaded_file($_FILES['event_image']['tmp_name'], $target_file)) {
+            $img_path = 'assets/images/events/' . $img_name;
+        }
+    }
+
+    $tags_arr = array_values(array_filter(array_map('trim', explode(',', $tags))));
+    $meta_data = [
+        'category' => $category,
+        'location' => $location,
+        'club_name' => $club_name,
+        'tags' => $tags_arr
+    ];
+    $meta_json = json_encode($meta_data);
+
+    if (empty($title) || empty($description) || empty($event_date) || empty($location)) {
+        $error_msg = "Please fill in all mandatory fields (Title, Description, Date, Location).";
+    } else {
+        $updated = Database::iud(
+            "UPDATE events SET title = ?, description = ?, event_date = ?, event_start_time = ?, event_end_time = ?, img_path = ?, meta_data = ?, status = ?, seats = ? WHERE event_id = ?",
+            "ssssssssii",
+            [$title, $description, $event_date, $event_start_time, $event_end_time, $img_path, $meta_json, $status, $seats, $event_id]
+        );
+
+        if ($updated) {
+            $success_msg = "Event updated successfully!";
+            // Refresh event data
+            $res = Database::search("SELECT * FROM events WHERE event_id = ? LIMIT 1", "i", [$event_id]);
+            if ($res && $res->num_rows > 0) {
+                $event = $res->fetch_assoc();
+            }
+        } else {
+            $error_msg = "Failed to update event.";
+        }
     }
 }
+
+// Decode metadata for display in form
+$meta_arr = !empty($event['meta_data']) ? json_decode($event['meta_data'], true) : [];
+$event_category = $meta_arr['category'] ?? ($event['category'] ?? 'Workshop');
+$event_club_name = $meta_arr['club_name'] ?? ($event['club_name'] ?? 'CampusHub General');
+$event_location = $meta_arr['location'] ?? ($event['location'] ?? 'Main Auditorium');
+$existing_tags_arr = $meta_arr['tags'] ?? [];
+$existing_tags_str = is_array($existing_tags_arr) ? implode(', ', $existing_tags_arr) : (string)$existing_tags_arr;
+$event_seats = isset($event['seats']) ? (int)$event['seats'] : (isset($event['max_participants']) ? (int)$event['max_participants'] : 100);
+$event_status = $event['status'] ?? 'display';
+$event_img_path = $event['img_path'] ?? 'assets/images/events/tech_coding_work_shop.jpg';
+$event_start_time = !empty($event['event_start_time']) ? $event['event_start_time'] : (!empty($event['event_time']) ? $event['event_time'] : '09:00:00');
+$event_end_time = !empty($event['event_end_time']) ? $event['event_end_time'] : '17:00:00';
 ?>
 <main class="page-container">
   <style>
@@ -200,7 +236,7 @@ if ($event && !empty($event['meta_data'])) {
         </div>
       <?php endif; ?>
 
-      <form action="edit_event.php?id=<?php echo htmlspecialchars($event_id); ?>" method="POST">
+      <form action="edit_event.php?id=<?php echo htmlspecialchars($event_id); ?>" method="POST" enctype="multipart/form-data">
         <div class="form-group">
           <label for="title">Event Title *</label>
           <input type="text" id="title" name="title" class="form-control" value="<?php echo htmlspecialchars($event['title']); ?>" required>
@@ -210,17 +246,17 @@ if ($event && !empty($event['meta_data'])) {
           <div class="form-group">
             <label for="category">Category</label>
             <select id="category" name="category" class="form-control">
-              <option value="Workshop" <?php echo ($event['category'] === 'Workshop') ? 'selected' : ''; ?>>Workshop</option>
-              <option value="Competition" <?php echo ($event['category'] === 'Competition') ? 'selected' : ''; ?>>Competition</option>
-              <option value="Sports" <?php echo ($event['category'] === 'Sports') ? 'selected' : ''; ?>>Sports</option>
-              <option value="Cultural" <?php echo ($event['category'] === 'Cultural') ? 'selected' : ''; ?>>Cultural</option>
-              <option value="Career" <?php echo ($event['category'] === 'Career') ? 'selected' : ''; ?>>Career</option>
+              <option value="Workshop" <?php echo ($event_category === 'Workshop') ? 'selected' : ''; ?>>Workshop</option>
+              <option value="Competition" <?php echo ($event_category === 'Competition') ? 'selected' : ''; ?>>Competition</option>
+              <option value="Sports" <?php echo ($event_category === 'Sports') ? 'selected' : ''; ?>>Sports</option>
+              <option value="Cultural" <?php echo ($event_category === 'Cultural') ? 'selected' : ''; ?>>Cultural</option>
+              <option value="Career" <?php echo ($event_category === 'Career') ? 'selected' : ''; ?>>Career</option>
             </select>
           </div>
 
           <div class="form-group">
             <label for="club_name">Organizing Club / Society</label>
-            <input type="text" id="club_name" name="club_name" class="form-control" value="<?php echo htmlspecialchars($event['club_name']); ?>" required>
+            <input type="text" id="club_name" name="club_name" class="form-control" value="<?php echo htmlspecialchars($event_club_name); ?>" required>
           </div>
         </div>
 
@@ -231,30 +267,46 @@ if ($event && !empty($event['meta_data'])) {
           </div>
 
           <div class="form-group">
-            <label for="event_time">Event Time *</label>
-            <input type="time" id="event_time" name="event_time" class="form-control" value="<?php echo htmlspecialchars($event['event_time']); ?>" required>
+            <label for="event_start_time">Event Start Time *</label>
+            <input type="time" id="event_start_time" name="event_start_time" class="form-control" value="<?php echo htmlspecialchars(substr($event_start_time, 0, 5)); ?>" required>
           </div>
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
-            <label for="location">Location / Venue *</label>
-            <input type="text" id="location" name="location" class="form-control" value="<?php echo htmlspecialchars($event['location']); ?>" required>
+            <label for="event_end_time">Event End Time *</label>
+            <input type="time" id="event_end_time" name="event_end_time" class="form-control" value="<?php echo htmlspecialchars(substr($event_end_time, 0, 5)); ?>" required>
           </div>
 
           <div class="form-group">
-            <label for="max_participants">Max Participant Seats</label>
-            <input type="number" id="max_participants" name="max_participants" class="form-control" value="<?php echo htmlspecialchars($event['max_participants']); ?>" min="1">
+            <label for="location">Location / Venue *</label>
+            <input type="text" id="location" name="location" class="form-control" value="<?php echo htmlspecialchars($event_location); ?>" required>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="seats">Max Participant Seats</label>
+            <input type="number" id="seats" name="seats" class="form-control" value="<?php echo htmlspecialchars($event_seats); ?>" min="1">
+          </div>
+
+          <div class="form-group">
+            <label for="status">Event Status</label>
+            <select id="status" name="status" class="form-control">
+              <option value="display" <?php echo ($event_status === 'display' || $event_status === 'upcoming') ? 'selected' : ''; ?>>Display</option>
+              <option value="hide" <?php echo ($event_status === 'hide' || $event_status === 'cancelled' || $event_status === 'completed') ? 'selected' : ''; ?>>Hide</option>
+            </select>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="status">Event Status</label>
-          <select id="status" name="status" class="form-control">
-            <option value="upcoming" <?php echo ($event['status'] === 'upcoming') ? 'selected' : ''; ?>>Upcoming</option>
-            <option value="completed" <?php echo ($event['status'] === 'completed') ? 'selected' : ''; ?>>Completed</option>
-            <option value="cancelled" <?php echo ($event['status'] === 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
-          </select>
+          <label for="img_path">Banner Image Path / URL</label>
+          <input type="text" id="img_path" name="img_path" class="form-control" value="<?php echo htmlspecialchars($event_img_path); ?>">
+        </div>
+
+        <div class="form-group">
+          <label for="event_image">Or Upload New Banner Image</label>
+          <input type="file" id="event_image" name="event_image" class="form-control" accept="image/*">
         </div>
 
         <div class="form-group">

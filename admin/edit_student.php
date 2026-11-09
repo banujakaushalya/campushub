@@ -19,18 +19,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $phone = isset($_POST['phone']) ? trim($_POST['phone']) : '';
     $gender = isset($_POST['gender']) ? trim($_POST['gender']) : 'male';
-    $student_id = isset($_POST['student_id']) ? trim($_POST['student_id']) : '';
-    $institution = isset($_POST['institution']) ? trim($_POST['institution']) : '';
     $role = isset($_POST['role']) ? trim($_POST['role']) : 'student';
 
     if (empty($first_name) || empty($last_name) || empty($email)) {
         $error_msg = "First Name, Last Name, and Email are required.";
     } else {
+        $user_role = in_array($role, ['student', 'teacher']) ? $role : 'student';
         $updated = Database::iud(
-            "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, gender = ?, student_id = ?, institution = ?, role = ? WHERE user_id = ?",
-            "ssssssssi",
-            [$first_name, $last_name, $email, $phone, $gender, $student_id, $institution, $role, $student_user_id]
+            "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, gender = ?, role = ? WHERE user_id = ?",
+            "ssssssi",
+            [$first_name, $last_name, $email, $phone, $gender, $user_role, $student_user_id]
         );
+
+        if (in_array($role, ['moderator', 'admin', 'super_admin'])) {
+            $chk = Database::search("SELECT admin_id FROM admin WHERE users_user_id = ?", "i", [$student_user_id]);
+            if ($chk && $chk->num_rows > 0) {
+                Database::iud("UPDATE admin SET role = ? WHERE users_user_id = ?", "si", [$role, $student_user_id]);
+            } else {
+                Database::iud("INSERT INTO admin (users_user_id, role) VALUES (?, ?)", "is", [$student_user_id, $role]);
+            }
+        } else {
+            Database::iud("DELETE FROM admin WHERE users_user_id = ?", "i", [$student_user_id]);
+        }
 
         if ($updated) {
             $success_msg = "Student record updated successfully!";

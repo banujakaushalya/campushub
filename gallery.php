@@ -45,10 +45,9 @@ $types = "";
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " AND (m.title LIKE ? OR m.description LIKE ? OR e.title LIKE ? OR m.meta_data LIKE ?)";
-    $types .= "ssss";
+    $sql .= " AND (m.title LIKE ? OR m.meta_data LIKE ? OR e.title LIKE ?)";
+    $types .= "sss";
     $s_term = "%$search%";
-    $params[] = $s_term;
     $params[] = $s_term;
     $params[] = $s_term;
     $params[] = $s_term;
@@ -60,10 +59,13 @@ if ($event_filter > 0) {
     $params[] = $event_filter;
 }
 
-if ($type_filter !== 'all' && ($type_filter === 'photo' || $type_filter === 'video')) {
-    $sql .= " AND m.media_type = ?";
-    $types .= "s";
-    $params[] = $type_filter;
+if ($type_filter !== 'all') {
+    $mapped_type = ($type_filter === 'photo' || $type_filter === 'image') ? 'image' : ($type_filter === 'video' ? 'video' : '');
+    if (!empty($mapped_type)) {
+        $sql .= " AND m.media_type = ?";
+        $types .= "s";
+        $params[] = $mapped_type;
+    }
 }
 
 if (!empty($tag_filter)) {
@@ -75,7 +77,7 @@ if (!empty($tag_filter)) {
 // Sorting logic
 switch ($sort) {
     case 'oldest':
-        $sql .= " ORDER BY m.created_at ASC";
+        $sql .= " ORDER BY m.media_id ASC";
         break;
     case 'title_asc':
         $sql .= " ORDER BY m.title ASC";
@@ -84,11 +86,11 @@ switch ($sort) {
         $sql .= " ORDER BY m.title DESC";
         break;
     case 'event_title':
-        $sql .= " ORDER BY e.title ASC, m.created_at DESC";
+        $sql .= " ORDER BY e.title ASC, m.media_id DESC";
         break;
     case 'newest':
     default:
-        $sql .= " ORDER BY m.created_at DESC";
+        $sql .= " ORDER BY m.media_id DESC";
         break;
 }
 
@@ -762,24 +764,27 @@ $has_active_filters = (!empty($search) || $event_filter > 0 || $type_filter !== 
           <?php foreach ($media_list as $media): ?>
             <?php 
               // Resolve image source
-              $img_src = 'assets/images/events/' . $media['file_url'];
+              $img_filename = $media['file_path'] ?? ($media['file_url'] ?? 'hero1.jpg');
+              $img_src = 'assets/images/events/' . $img_filename;
               if (!file_exists($img_src)) {
-                  $img_src = 'assets/images/' . $media['file_url'];
+                  $img_src = 'assets/images/' . $img_filename;
                   if (!file_exists($img_src)) {
                       $img_src = 'assets/images/hero1.jpg';
                   }
               }
 
-              // Extract tags
+              // Extract tags and description
               $card_tags = [];
+              $card_desc = '';
               if (!empty($media['meta_data'])) {
                   $meta = json_decode($media['meta_data'], true);
+                  $card_desc = $meta['description'] ?? '';
                   if (isset($meta['tags']) && is_array($meta['tags'])) {
                       $card_tags = $meta['tags'];
                   }
               }
             ?>
-            <article class="gallery-card" onclick="openLightbox('<?php echo htmlspecialchars($img_src); ?>', '<?php echo htmlspecialchars(addslashes($media['title'])); ?>', '<?php echo htmlspecialchars(addslashes($media['description'] ?? '')); ?>', '<?php echo htmlspecialchars(addslashes($media['event_title'] ?? 'Campus Event')); ?>')">
+            <article class="gallery-card" onclick="openLightbox('<?php echo htmlspecialchars($img_src); ?>', '<?php echo htmlspecialchars(addslashes($media['title'])); ?>', '<?php echo htmlspecialchars(addslashes($card_desc)); ?>', '<?php echo htmlspecialchars(addslashes($media['event_title'] ?? 'Campus Event')); ?>')">
               <div class="gallery-img-wrap">
                 <img src="<?php echo htmlspecialchars($img_src); ?>" alt="<?php echo htmlspecialchars($media['title']); ?>" class="gallery-img" loading="lazy">
                 <span class="media-type-badge"><?php echo htmlspecialchars($media['media_type']); ?></span>
@@ -789,7 +794,7 @@ $has_active_filters = (!empty($search) || $event_filter > 0 || $type_filter !== 
                   <span class="gallery-tag"><?php echo htmlspecialchars($media['event_title']); ?></span>
                 <?php endif; ?>
                 <h2 class="gallery-title"><?php echo htmlspecialchars($media['title']); ?></h2>
-                <p class="gallery-desc"><?php echo htmlspecialchars($media['description'] ?? ''); ?></p>
+                <p class="gallery-desc"><?php echo htmlspecialchars($card_desc); ?></p>
                 
                 <?php if (!empty($card_tags)): ?>
                   <div class="gallery-card-tags">
@@ -800,7 +805,7 @@ $has_active_filters = (!empty($search) || $event_filter > 0 || $type_filter !== 
                 <?php endif; ?>
 
                 <div class="gallery-meta-footer">
-                  <span><?php echo date('M d, Y', strtotime($media['created_at'])); ?></span>
+                  <span>Campus Gallery</span>
                   <span><?php echo htmlspecialchars($media['first_name'] ? ($media['first_name'] . ' ' . $media['last_name']) : 'CampusHub'); ?></span>
                 </div>
               </div>

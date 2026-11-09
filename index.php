@@ -4,7 +4,7 @@ require_once 'includes/db.php';
 
 // Fetch real events from database
 $events = [];
-$events_result = Database::search("SELECT * FROM events WHERE status = 'upcoming' ORDER BY event_date ASC LIMIT 6");
+$events_result = Database::search("SELECT * FROM events WHERE status = 'display' ORDER BY event_date ASC LIMIT 6");
 if ($events_result && $events_result->num_rows > 0) {
     while ($row = $events_result->fetch_assoc()) {
         $events[] = $row;
@@ -13,7 +13,7 @@ if ($events_result && $events_result->num_rows > 0) {
 
 // Fetch announcements
 $announcements = [];
-$ann_result = Database::search("SELECT * FROM announcements ORDER BY created_at DESC LIMIT 3");
+$ann_result = Database::search("SELECT * FROM announcements WHERE (status = 'display' OR status IS NULL) ORDER BY date_posted DESC LIMIT 3");
 if ($ann_result && $ann_result->num_rows > 0) {
     while ($row = $ann_result->fetch_assoc()) {
         $announcements[] = $row;
@@ -124,8 +124,13 @@ if ($ann_result && $ann_result->num_rows > 0) {
     }
 
     .img-container {
-      min-height: 174px;
-      background: linear-gradient(135deg, rgba(255, 107, 74, .18), transparent), url('assets/images/events/tech_coding_work_shop.jpg') center / cover;
+      width: 100%;
+      height: 180px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #f0f2f5;
+      flex-shrink: 0;
     }
 
     .event-info {
@@ -277,15 +282,17 @@ if ($ann_result && $ann_result->num_rows > 0) {
       <div class="event-container">
         <?php foreach ($events as $event): ?>
           <?php
-            $formatted_date = date('M d, Y', strtotime($event['event_date']));
-            $formatted_time = date('g:i A', strtotime($event['event_time']));
+            $formatted_date = !empty($event['event_date']) ? date('M d, Y', strtotime($event['event_date'])) : 'TBD';
+            $time_raw = !empty($event['event_start_time']) ? $event['event_start_time'] : (!empty($event['event_time']) ? $event['event_time'] : '09:00:00');
+            $formatted_time = date('g:i A', strtotime($time_raw));
+            $card_img = !empty($event['img_path']) ? $event['img_path'] : 'assets/images/events/tech_coding_work_shop.jpg';
           ?>
-          <a href="student/event_details.php?id=<?php echo htmlspecialchars($event['event_id']); ?>" class="event-card">
-            <div class="img-container"></div>
+          <a href="event_details.php?id=<?php echo htmlspecialchars($event['event_id']); ?>" class="event-card">
+            <div class="img-container" style="background-image: url('<?php echo htmlspecialchars($card_img); ?>');"></div>
             <div class="event-info">
               <p class="event-meta"><?php echo strtoupper($formatted_date); ?> · <?php echo $formatted_time; ?></p>
-              <h3><?php echo htmlspecialchars($event['title']); ?></h3>
-              <p><?php echo htmlspecialchars(mb_strimwidth($event['description'], 0, 95, '...')); ?></p>
+              <h3><?php echo htmlspecialchars($event['title'] ?? 'Event'); ?></h3>
+              <p><?php echo htmlspecialchars(mb_strimwidth($event['description'] ?? '', 0, 95, '...')); ?></p>
             </div>
           </a>
         <?php endforeach; ?>
@@ -293,7 +300,7 @@ if ($ann_result && $ann_result->num_rows > 0) {
 
       <nav class="pagination-container" aria-label="Event pages">
         <a class="page-link active" href="index.php">1</a>
-        <a class="page-link" href="student/events.php">Browse All Events &raquo;</a>
+        <a class="page-link" href="events.php">Browse All Events &raquo;</a>
       </nav>
     <?php else: ?>
       <div style="background: #ffffff; border: 1px solid var(--line); border-radius: 12px; padding: 36px; text-align: center; color: var(--muted); margin-top: 16px;">
@@ -314,10 +321,10 @@ if ($ann_result && $ann_result->num_rows > 0) {
 
     <?php if (!empty($announcements)): ?>
       <?php foreach ($announcements as $ann): ?>
-        <?php $ann_date = date('M d, Y', strtotime($ann['created_at'])); ?>
+        <?php $ann_date = !empty($ann['date_posted']) ? date('M d, Y', strtotime($ann['date_posted'])) : 'RECENT'; ?>
         <article class="announcement">
           <div>
-            <h3><?php echo htmlspecialchars($ann['title']); ?></h3>
+            <h3><a href="announcement_details.php?id=<?php echo htmlspecialchars($ann['id']); ?>" style="color: var(--ink); text-decoration: none;"><?php echo htmlspecialchars($ann['title']); ?></a></h3>
             <p><?php echo htmlspecialchars(mb_strimwidth($ann['content'], 0, 110, '...')); ?></p>
           </div>
           <span class="announcement-date"><?php echo strtoupper($ann_date); ?></span>

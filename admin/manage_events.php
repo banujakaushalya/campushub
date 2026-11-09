@@ -135,11 +135,10 @@ if ($res && $res->num_rows > 0) {
       <thead>
         <tr>
           <th>Event Title</th>
-          <th>Category</th>
-          <th>Club / Society</th>
+
           <th>Date & Time</th>
-          <th>Location</th>
-          <th>Capacity</th>
+            <th>End-time</th>
+          <th>Seats</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -149,13 +148,22 @@ if ($res && $res->num_rows > 0) {
           <tr><td colspan="8" style="text-align: center; padding: 30px;">No events created yet.</td></tr>
         <?php else: ?>
           <?php foreach ($events as $ev): ?>
+            <?php
+              $meta = !empty($ev['meta_data']) ? json_decode($ev['meta_data'], true) : [];
+              $category = $meta['category'] ?? ($ev['category'] ?? 'General');
+              $location = $meta['location'] ?? ($ev['location'] ?? 'Campus Grounds');
+              $start_time = !empty($ev['event_start_time']) ? $ev['event_start_time'] : (!empty($ev['event_time']) ? $ev['event_time'] : '09:00:00');
+              $end_time = !empty($ev['event_end_time']) ? $ev['event_end_time'] : '17:00:00';
+              $seats = isset($ev['seats']) ? $ev['seats'] : ($ev['max_participants'] ?? 100);
+            ?>
             <tr>
-              <td><strong><?php echo htmlspecialchars($ev['title']); ?></strong></td>
-              <td><span style="background: #f0f2f5; padding: 4px 8px; border-radius: 6px; font-weight: 600;"><?php echo htmlspecialchars($ev['category']); ?></span></td>
-              <td><?php echo htmlspecialchars($ev['club_name']); ?></td>
-              <td><?php echo date('M d, Y', strtotime($ev['event_date'])); ?><br><small style="color: var(--muted);"><?php echo date('g:i A', strtotime($ev['event_time'])); ?></small></td>
-              <td><?php echo htmlspecialchars($ev['location']); ?></td>
-              <td><?php echo htmlspecialchars($ev['max_participants']); ?></td>
+              <td>
+                <strong><?php echo htmlspecialchars($ev['title']); ?></strong><br>
+                <small style="color: var(--muted);"><?php echo htmlspecialchars($category); ?> &bull; <?php echo htmlspecialchars($location); ?></small>
+              </td>
+              <td><?php echo date('M d, Y', strtotime($ev['event_date'])); ?><br><small style="color: var(--muted);"><?php echo date('g:i A', strtotime($start_time)); ?></small></td>
+              <td><?php echo date('g:i A', strtotime($end_time)); ?></td>
+              <td><?php echo htmlspecialchars($seats); ?></td>
               <td><strong><?php echo ucfirst(htmlspecialchars($ev['status'])); ?></strong></td>
               <td>
                 <a href="edit_event.php?id=<?php echo htmlspecialchars($ev['event_id']); ?>" class="btn-sm btn-edit">Edit</a>

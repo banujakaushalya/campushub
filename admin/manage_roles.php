@@ -74,44 +74,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_direct_role'])
     } elseif ($new_role === 'super_admin' && $curr_role !== 'super_admin') {
         $message = "Only Super Administrators can modify Super Admin accounts.";
         $message_type = "error";
-    } elseif (in_array($new_role, ['student', 'moderator', 'admin', 'teacher'])) {
-        Database::iud("UPDATE users SET role = ? WHERE user_id = ?", "si", [$new_role, $target_uid]);
-        if ($new_role === 'admin') {
+    } elseif (in_array($new_role, ['student', 'moderator', 'admin', 'teacher', 'super_admin'])) {
+        if (in_array($new_role, ['moderator', 'admin', 'super_admin'])) {
             $chk = Database::search("SELECT admin_id FROM admin WHERE users_user_id = ?", "i", [$target_uid]);
-            if (!$chk || $chk->num_rows === 0) {
-                Database::iud("INSERT INTO admin (users_user_id, department) VALUES (?, 'Student Services')", "i", [$target_uid]);
+            if ($chk && $chk->num_rows > 0) {
+                Database::iud("UPDATE admin SET role = ? WHERE users_user_id = ?", "si", [$new_role, $target_uid]);
+            } else {
+                Database::iud("INSERT INTO admin (users_user_id, role) VALUES (?, ?)", "is", [$target_uid, $new_role]);
             }
+        } else {
+            Database::iud("UPDATE users SET role = ? WHERE user_id = ?", "si", [$new_role, $target_uid]);
+            Database::iud("DELETE FROM admin WHERE users_user_id = ?", "i", [$target_uid]);
         }
         $message = "User role successfully updated to " . ucfirst(str_replace('_', ' ', $new_role)) . ".";
         $message_type = "success";
     }
 }
 
-// Fetch pending role applications
+// Pending role applications
 $pending_apps = [];
-$p_res = Database::search("SELECT ra.*, u.first_name, u.last_name, u.email, u.student_id, u.role as current_role
-                          FROM role_applications ra
-                          JOIN users u ON ra.user_id = u.user_id
-                          WHERE ra.status = 'pending'
-                          ORDER BY ra.applied_at ASC");
-if ($p_res && $p_res->num_rows > 0) {
-    while ($row = $p_res->fetch_assoc()) {
-        $pending_apps[] = $row;
-    }
-}
 
-// Fetch all staff and moderators
+// Fetch all staff and users with effective roles
 $staff_list = [];
-$st_res = Database::search("SELECT user_id, first_name, last_name, email, phone, role, student_id, institution, created_at 
-                           FROM users 
-                           ORDER BY CASE 
-                               WHEN role = 'super_admin' THEN 1 
-                               WHEN role = 'admin' THEN 2 
-                               WHEN role = 'moderator' THEN 3 
-                               ELSE 4 
-                           END, first_name ASC");
+$st_res = Database::search("SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.role as user_role, a.role as admin_role 
+                           FROM users u 
+                           LEFT JOIN admin a ON u.user_id = a.users_user_id 
+                           ORDER BY u.user_id ASC");
 if ($st_res && $st_res->num_rows > 0) {
     while ($row = $st_res->fetch_assoc()) {
+        $row['role'] = !empty($row['admin_role']) ? $row['admin_role'] : $row['user_role'];
         $staff_list[] = $row;
     }
 }
@@ -396,7 +387,7 @@ if ($st_res && $st_res->num_rows > 0) {
                   <?php echo htmlspecialchars($usr['email']); ?><br>
                   <small style="color: var(--muted);"><?php echo htmlspecialchars($usr['phone']); ?></small>
                 </td>
-                <td><?php echo htmlspecialchars($usr['student_id'] ?? 'N/A'); ?></td>
+                <td>STU-<?php echo str_pad($usr['user_id'], 4, '0', STR_PAD_LEFT); ?></td>
                 <td>
                   <span class="role-badge badge-<?php echo htmlspecialchars($usr['role']); ?>">
                     <?php echo htmlspecialchars(str_replace('_', ' ', $usr['role'])); ?>

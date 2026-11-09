@@ -12,16 +12,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $last_name = isset($_POST['last_name']) ? trim($_POST['last_name']) : '';
     $phone = isset($_POST['phone']) ? trim($_POST['phone']) : '';
     $gender = isset($_POST['gender']) ? trim($_POST['gender']) : 'male';
-    $student_id = isset($_POST['student_id']) ? trim($_POST['student_id']) : '';
-    $institution = isset($_POST['institution']) ? trim($_POST['institution']) : '';
 
     if (empty($first_name) || empty($last_name) || empty($phone)) {
         $error_msg = "First Name, Last Name, and Phone are required fields.";
     } else {
         $updated = Database::iud(
-            "UPDATE users SET first_name = ?, last_name = ?, phone = ?, gender = ?, student_id = ?, institution = ? WHERE user_id = ?",
-            "ssssssi",
-            [$first_name, $last_name, $phone, $gender, $student_id, $institution, $user_id]
+            "UPDATE users SET first_name = ?, last_name = ?, phone = ?, gender = ? WHERE user_id = ?",
+            "ssssi",
+            [$first_name, $last_name, $phone, $gender, $user_id]
         );
 
         if ($updated) {

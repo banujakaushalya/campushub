@@ -2,14 +2,15 @@
 require_once 'includes/header.php';
 require_once 'includes/db.php';
 
-// Beginner-friendly search & category filter handling
+
 $filter_category = isset($_GET['category']) ? trim($_GET['category']) : 'all';
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 $announcements = [];
 $db_connected = false;
 
-$sql = "SELECT * FROM announcements WHERE 1=1";
+
+$sql = "SELECT * FROM announcements WHERE (status = 'display' OR status IS NULL)";
 $params = [];
 $types = "";
 
@@ -28,7 +29,8 @@ if (!empty($search_query)) {
     $types .= "sss";
 }
 
-$sql .= " ORDER BY created_at DESC";
+// FIX 2: Changed created_at to date_posted
+$sql .= " ORDER BY date_posted DESC";
 
 $result = Database::search($sql, $types, $params);
 
@@ -171,7 +173,6 @@ if ($result && $result->num_rows > 0) {
       background: #2b354f;
     }
 
-    /* Announcement Cards */
     .announcement-list {
       display: flex;
       flex-direction: column;
@@ -322,10 +323,10 @@ if ($result && $result->num_rows > 0) {
           <p class="announcement-body">No circulars match your selected search or filter criteria.</p>
         </div>
       <?php else: ?>
-        <?php foreach ($announcements as $item): ?>
-          <?php 
-            $p_class = 'priority-' . strtolower($item['priority'] ?? 'medium');
-            $date_str = date('M d, Y', strtotime($item['created_at'] ?? 'now'));
+          <?php foreach ($announcements as $item): ?>
+          <?php
+              $p_class = 'priority-' . strtolower($item['priority'] ?? 'medium');
+              $date_str = date('M d, Y', strtotime($item['date_posted'] ?? 'now'));
           ?>
           <article class="announcement-card">
             <div class="announcement-header">

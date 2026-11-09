@@ -238,6 +238,8 @@
     <section class="login-container" aria-labelledby="login-heading">
       <h2 id="login-heading">Log In</h2>
       <form>
+        <label for="user-name">User Name</label>
+        <input type="text" name="user-name" id="userName">
         <div class="form-group">
           <label for="login-email-input">Enter Your Email</label>
           <input type="email" name="email" id="loginEmail" autocomplete="email" required>
@@ -248,10 +250,40 @@
         </div>
         <button type="button" id="loginBtn" onclick="logIn();">Log In</button>
       </form>
+      <p>Forgot password? <button type="button" id="show-forgot" onclick="toggleForgot();">Reset Password</button></p>
       <p>Don't have an account? <button type="button" id="show-register">Register</button></p>
     </section>
 
     <hr>
+
+    <section class="forgot-container" aria-labelledby="forgot-heading" hidden>
+      <h2 id="forgot-heading">Reset Password</h2>
+      <div id="forgot-step-1">
+        <div class="form-group">
+          <label for="forgotEmail">Enter Your Email</label>
+          <input type="email" id="forgotEmail" placeholder="your.email@campushub.com" required>
+        </div>
+        <button type="button" id="requestResetBtn" onclick="requestResetCode();">Send Verification Code</button>
+      </div>
+
+      <div id="forgot-step-2" hidden>
+        <div class="form-group">
+          <label for="resetCode">Enter 6-Digit Code</label>
+          <input type="text" id="resetCode" placeholder="••••••" maxlength="6" style="letter-spacing:4px; font-weight:bold; text-align:center;" required>
+        </div>
+        <div class="form-group">
+          <label for="newPass">New Password</label>
+          <input type="password" id="newPass" required>
+        </div>
+        <div class="form-group">
+          <label for="confirmNewPass">Confirm New Password</label>
+          <input type="password" id="confirmNewPass" required>
+        </div>
+        <button type="button" id="verifyResetBtn" onclick="verifyAndResetPassword();">Update Password</button>
+      </div>
+
+      <p style="margin-top: 15px;">Remembered your password? <button type="button" id="show-login-forgot" onclick="toggleLogin();">Log In</button></p>
+    </section>
 
     <section class="reg-container" aria-labelledby="register-heading" hidden>
       <h2 id="register-heading">Register</h2>
@@ -312,9 +344,102 @@
   <script>
     const loginSection = document.querySelector('.login-container');
     const registerSection = document.querySelector('.reg-container');
+    const forgotSection = document.querySelector('.forgot-container');
     const showRegisterButton = document.querySelector('#show-register');
     const showLoginButton = document.querySelector('#show-login');
 
+    if (showRegisterButton) {
+      showRegisterButton.addEventListener('click', () => {
+        loginSection.hidden = true;
+        forgotSection.hidden = true;
+        registerSection.hidden = false;
+      });
+    }
+
+    if (showLoginButton) {
+      showLoginButton.addEventListener('click', () => {
+        registerSection.hidden = true;
+        forgotSection.hidden = true;
+        loginSection.hidden = false;
+      });
+    }
+
+    function toggleForgot() {
+      loginSection.hidden = true;
+      registerSection.hidden = true;
+      forgotSection.hidden = false;
+    }
+
+    function toggleLogin() {
+      forgotSection.hidden = true;
+      registerSection.hidden = true;
+      loginSection.hidden = false;
+    }
+
+    async function requestResetCode() {
+      const email = document.getElementById('forgotEmail').value.trim();
+      if (!email) {
+        showNotification('Please enter your email address.', true);
+        return;
+      }
+
+      try {
+        const res = await fetch('forgot_password.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'request_code', email: email })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          showNotification(result.message);
+          document.getElementById('forgot-step-1').hidden = true;
+          document.getElementById('forgot-step-2').hidden = false;
+        } else {
+          showNotification(result.message || 'Failed to send reset code.', true);
+        }
+      } catch (err) {
+        showNotification('Network error. Please try again.', true);
+      }
+    }
+
+    async function verifyAndResetPassword() {
+      const code = document.getElementById('resetCode').value.trim();
+      const newPass = document.getElementById('newPass').value;
+      const confirmPass = document.getElementById('confirmNewPass').value;
+
+      if (!code || !newPass || !confirmPass) {
+        showNotification('Please fill in all fields.', true);
+        return;
+      }
+
+      try {
+        const res = await fetch('forgot_password.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'verify_and_reset',
+            code: code,
+            new_password: newPass,
+            confirm_password: confirmPass
+          })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          showNotification(result.message);
+          setTimeout(() => {
+            toggleLogin();
+            document.getElementById('forgot-step-1').hidden = false;
+            document.getElementById('forgot-step-2').hidden = true;
+          }, 2000);
+        } else {
+          showNotification(result.message || 'Failed to reset password.', true);
+        }
+      } catch (err) {
+        showNotification('Network error. Please try again.', true);
+      }
+    }
 
     async function register() {
       const fname = document.getElementById('fname').value.trim();
@@ -347,7 +472,7 @@
 
         if (result.success) {
           showNotification(result.message);
-          setTimeout(() => window.location.reload(), 2500);
+          setTimeout(() => window.location.href = 'login.php', 2500);
         } else {
           showNotification(result.message || 'Registration failed.', true);
         }
@@ -361,7 +486,9 @@
     async function logIn() {
       const logInPass = document.getElementById('logInPass').value.trim();
       const logInEmail = document.getElementById('loginEmail').value.trim();
+      const userName = document.getElementById('userName').value.trim();
       try {
+        alert(userName);
         const res = await fetch('loginProccess.php', {
           method: 'POST',
           headers: {

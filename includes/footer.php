@@ -108,7 +108,7 @@ if (file_exists("../includes/header.php")) {
 
     <div class="socials">
       <h3>Portals</h3>
-      <a href="<?php echo $path; ?>student/events.php">Student Events</a>
+      <a href="<?php echo $path; ?>events.php">Campus Events</a>
       <a href="<?php echo $path; ?>student/dashboard.php">Student Portal</a>
       <a href="<?php echo $path; ?>admin/dashboard.php">Admin Portal</a>
     </div>

@@ -14,6 +14,8 @@ if ($curr_role !== 'super_admin' && $curr_role !== 'admin' && $curr_role !== 'mo
 $event_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($event_id > 0) {
+    Database::iud("DELETE FROM registrations WHERE events_event_id = ?", "i", [$event_id]);
+    Database::iud("DELETE FROM media WHERE events_event_id = ?", "i", [$event_id]);
     Database::iud("DELETE FROM events WHERE event_id = ?", "i", [$event_id]);
 }
 

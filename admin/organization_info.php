@@ -14,30 +14,14 @@ $message_type = "";
 
 // Handle updating organization info
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_org_info'])) {
-    $org_name = trim($_POST['org_name'] ?? '');
-    $org_tagline = trim($_POST['org_tagline'] ?? '');
     $org_email = trim($_POST['org_email'] ?? '');
-    $org_phone = trim($_POST['org_phone'] ?? '');
-    $org_address = trim($_POST['org_address'] ?? '');
-    $org_about = trim($_POST['org_about'] ?? '');
 
-    // Save key-value settings in master_control or settings
-    $settings = [
-        'org_name' => $org_name,
-        'org_tagline' => $org_tagline,
-        'org_email' => $org_email,
-        'org_phone' => $org_phone,
-        'org_address' => $org_address,
-        'org_about' => $org_about
-    ];
-
-    foreach ($settings as $key => $val) {
-        // Check if key exists
-        $chk = Database::search("SELECT id FROM master_control WHERE setting_key = ?", "s", [$key]);
+    if (!empty($org_email)) {
+        $chk = Database::search("SELECT id FROM master_control LIMIT 1");
         if ($chk && $chk->num_rows > 0) {
-            Database::iud("UPDATE master_control SET setting_value = ? WHERE setting_key = ?", "ss", [$val, $key]);
+            Database::iud("UPDATE master_control SET email = ?", "s", [$org_email]);
         } else {
-            Database::iud("INSERT INTO master_control (setting_key, setting_value) VALUES (?, ?)", "ss", [$key, $val]);
+            Database::iud("INSERT INTO master_control (email) VALUES (?)", "s", [$org_email]);
         }
     }
 
@@ -45,13 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_org_info'])) {
     $message_type = "success";
 }
 
-// Fetch current organizational settings
+// Fetch current master control email
 $org_data = [];
-$res = Database::search("SELECT setting_key, setting_value FROM master_control");
-if ($res && $res->num_rows > 0) {
-    while ($row = $res->fetch_assoc()) {
-        $org_data[$row['setting_key']] = $row['setting_value'];
-    }
+$res = Database::search("SELECT email FROM master_control LIMIT 1");
+if ($res && $row = $res->fetch_assoc()) {
+    $org_data['org_email'] = $row['email'];
 }
 ?>
 <main class="page-container">

@@ -15,28 +15,14 @@ $message_type = "";
 
 // Handle Master Settings Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_master_control'])) {
-    $allow_registration = isset($_POST['allow_registration']) ? 'true' : 'false';
-    $allow_media_upload = isset($_POST['allow_media_upload']) ? 'true' : 'false';
-    $maintenance_mode = isset($_POST['maintenance_mode']) ? 'true' : 'false';
-    $system_name = trim($_POST['system_name'] ?? 'CampusHub Student Services System');
-    $emergency_broadcast = trim($_POST['emergency_broadcast'] ?? '');
-    $institution_name = trim($_POST['institution_name'] ?? 'Java Institute for Advanced Technology');
+    $master_email = trim($_POST['master_email'] ?? 'superadmin@campushub.edu');
 
-    $controls = [
-        'allow_registration' => $allow_registration,
-        'allow_media_upload' => $allow_media_upload,
-        'maintenance_mode' => $maintenance_mode,
-        'system_name' => $system_name,
-        'emergency_broadcast' => $emergency_broadcast,
-        'institution_name' => $institution_name
-    ];
-
-    foreach ($controls as $key => $val) {
-        $chk = Database::search("SELECT id FROM master_control WHERE setting_key = ?", "s", [$key]);
+    if (!empty($master_email)) {
+        $chk = Database::search("SELECT id FROM master_control LIMIT 1");
         if ($chk && $chk->num_rows > 0) {
-            Database::iud("UPDATE master_control SET setting_value = ? WHERE setting_key = ?", "ss", [$val, $key]);
+            Database::iud("UPDATE master_control SET email = ?", "s", [$master_email]);
         } else {
-            Database::iud("INSERT INTO master_control (setting_key, setting_value) VALUES (?, ?)", "ss", [$key, $val]);
+            Database::iud("INSERT INTO master_control (email) VALUES (?)", "s", [$master_email]);
         }
     }
 
@@ -46,11 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_master_control']
 
 // Fetch current master control values
 $controls_data = [];
-$res = Database::search("SELECT setting_key, setting_value FROM master_control");
-if ($res && $res->num_rows > 0) {
-    while ($row = $res->fetch_assoc()) {
-        $controls_data[$row['setting_key']] = $row['setting_value'];
-    }
+$res = Database::search("SELECT email FROM master_control LIMIT 1");
+if ($res && $row = $res->fetch_assoc()) {
+    $controls_data['email'] = $row['email'];
 }
 
 // Fetch system counts
@@ -492,18 +476,8 @@ if ($m_res && $row = $m_res->fetch_assoc()) {
       </div>
 
       <div class="form-group">
-        <label for="system_name">System Name / Campus Portal Title</label>
-        <input type="text" name="system_name" id="system_name" class="form-control" value="<?php echo htmlspecialchars($controls_data['system_name'] ?? 'CampusHub Student Services System'); ?>" required>
-      </div>
-
-      <div class="form-group">
-        <label for="institution_name">Institution / University Branch</label>
-        <input type="text" name="institution_name" id="institution_name" class="form-control" value="<?php echo htmlspecialchars($controls_data['institution_name'] ?? 'Java Institute for Advanced Technology'); ?>" required>
-      </div>
-
-      <div class="form-group">
-        <label for="emergency_broadcast">Master Emergency Banner Broadcast (Leave blank for normal operations)</label>
-        <input type="text" name="emergency_broadcast" id="emergency_broadcast" class="form-control" placeholder="e.g. Weather Advisory: All evening events rescheduled." value="<?php echo htmlspecialchars($controls_data['emergency_broadcast'] ?? ''); ?>">
+        <label for="master_email">Master Administrator Email *</label>
+        <input type="email" name="master_email" id="master_email" class="form-control" value="<?php echo htmlspecialchars($controls_data['email'] ?? 'superadmin@campushub.edu'); ?>" required>
       </div>
 
       <button type="submit" name="save_master_control" class="btn-save">Apply Master Configurations</button>
